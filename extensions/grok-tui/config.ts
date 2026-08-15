@@ -45,6 +45,9 @@ export const DEFAULT_CONFIG: GrokTuiConfig = {
 	cursor: "bar",
 	completion: "above",
 	spinner: "braille",
+	workingStats: true,
+	workingLabel: "Working",
+	collapseTools: true,
 	// Plain text by default: the glyphs read as clutter next to the text they
 	// label. Set to "nerd" or "auto" to bring them back.
 	icons: "off",

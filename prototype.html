@@ -447,7 +447,7 @@
 					<div class="hair"></div>
 					<div class="user-msg">重构 auth 中间件</div>
 					<div class="gap-sm"></div>
-					<div class="t-muted"><span class="spin" data-spin>⠋</span> 思考中 <span class="t-dim">4s</span></div>
+					<div class="t-muted"><span class="spin" data-spin>⣾</span> Working <span class="t-dim">12s · 3.4k tok</span></div>
 					<div class="gap"></div>
 					<div class="gap"></div>
 					<div class="gap"></div>
@@ -605,7 +605,7 @@
 				<div class="user-msg">重构 auth 中间件，把 token 校验抽成独立函数</div>
 				<div class="gap-sm"></div>
 
-				<div class="t-muted"><span class="spin" data-spin>⠋</span> 思考中 <span class="t-dim">4s</span></div>
+				<div class="t-muted"><span class="spin" data-spin>⣾</span> Working <span class="t-dim">12s · 3.4k tok</span></div>
 				<div class="gap-sm"></div>
 
 				<div class="t-dim">先看现有的中间件签名，再决定拆分边界。</div>
@@ -626,8 +626,7 @@
 				<div class="gap-sm"></div>
 
 				<div class="tool">
-					<div class="tool-title"><span class="b">bash</span> <span class="arg">npm test</span></div>
-					<div class="t-muted">42 passing</div>
+					<div class="tool-title"><span class="b">bash</span> <span class="arg">npm test</span> <span class="t-dim">· 折叠中，ctrl+o 展开</span></div>
 				</div>
 				<div class="gap-sm"></div>
 
@@ -705,6 +704,14 @@
 			<div class="row">
 				<div class="what">加载指示器 <span class="badge ext">扩展</span></div>
 				<div class="detail"><b>不换成呼吸点，但换了帧。</b>pi 原生的 <code>⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏</code> 是两点在 2×4 braille 点阵里绕圈，实测（Maple Mono NF CN，1/1000 em）重心在 340–553 之间移动、跳动 213 ≈ 字号 21%，所以 spinner 相对 working 文字上下浮。改用 <code>⣾⣽⣻⢿⡿⣟⣯⣷</code>——八点亮七点、转的是缺口，每帧包围盒相同，重心恒定 340。<br />也试过方形的 <code>◧◩◨◪</code>（600×600 正方形、同样零抖动），但 Unicode 里这类方形部分填充字符只有 4 个，帧数减半后动画明显更跳，观感不如点阵转圈——留作 <code>spinner: "square"</code> 选项。</div>
+			</div>
+			<div class="row">
+				<div class="what">working 行 <span class="badge ext">扩展</span></div>
+				<div class="detail"><code>Working 12s · 3.4k tok</code>，每 250ms 刷新。秒数从 <code>agent_start</code> 计到 <code>agent_end</code>，跨越整个 agent 运行；token 取 <code>message_update</code> 里 <code>partial.usage.output</code>，已结束的消息累加、正在流的单独记。<b>token 能否实时跳动取决于 provider</b>——不在流式过程中报 usage 的，会停在 0 直到消息结束。会覆盖 <code>pi-working-phrase</code> 的随机词。</div>
+			</div>
+			<div class="row">
+				<div class="what">工具输出 <span class="badge ext">扩展</span></div>
+				<div class="detail">启动时用 <code>setToolsExpanded(false)</code> 折叠，只留标题行。这只设初始状态——pi 内置的 <code>Ctrl+O</code> 照常切换，不抢它。</div>
 			</div>
 			<div class="row">
 				<div class="what">用户消息 <span class="badge theme">主题</span></div>
@@ -865,7 +872,7 @@
 <script>
 	// pi's default braille spinner, running at its real cadence
 	(function () {
-		var frames = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
+		var frames = "⣾⣽⣻⢿⡿⣟⣯⣷";
 		var targets = document.querySelectorAll("[data-spin]");
 		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 		var i = 0;

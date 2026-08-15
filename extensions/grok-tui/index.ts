@@ -5,8 +5,16 @@ import { installFooter } from "./footer.ts";
 import { installHeader } from "./header.ts";
 import { detectNerdFont } from "./icons.ts";
 import { installSpinner } from "./spinner.ts";
+import { installWorkingStats } from "./working.ts";
 
 type Teardown = () => void;
+
+/** Tool output starts collapsed; pi's own ctrl+o still toggles it. */
+function installTools(ctx: ExtensionContext, config: GrokTuiConfig): Teardown {
+	if (!config.collapseTools) return () => {};
+	ctx.ui.setToolsExpanded(false);
+	return () => ctx.ui.setToolsExpanded(true);
+}
 
 export default function (pi: ExtensionAPI) {
 	let teardowns: Teardown[] = [];
@@ -19,6 +27,7 @@ export default function (pi: ExtensionAPI) {
 			installFooter(pi, ctx, config),
 			installEditor(ctx, config),
 			installSpinner(ctx, config),
+			installTools(ctx, config),
 		];
 	};
 
@@ -26,6 +35,10 @@ export default function (pi: ExtensionAPI) {
 		for (const teardown of teardowns.reverse()) teardown();
 		teardowns = [];
 	};
+
+	// Event handlers can't be unregistered, so this reads config lazily and
+	// no-ops when the chrome is off.
+	installWorkingStats(pi, () => config);
 
 	pi.on("session_start", (_event, ctx) => {
 		install(ctx);

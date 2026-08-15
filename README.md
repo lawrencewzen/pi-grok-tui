@@ -30,6 +30,8 @@
 | 编辑器光标 | 扩展 | 交给终端自己画（尊重你的 `cursor-style`），剥掉 pi 的反显方块 |
 | 补全面板 | 扩展 | 向上展开，输入框留在原地；面板本身仍由 pi 渲染 |
 | spinner | 扩展 | braille 转圈，换成重心恒定的一组帧（见下） |
+| working 行 | 扩展 | `Working 12s · 3.4k tok`，秒数和输出 token 每 250ms 刷新 |
+| 工具输出 | 扩展 | 启动时折叠，`Ctrl+O`（pi 内置）随时展开 |
 | 启动清单 | pi 内核 | 替换不了，用 `quietStartup` 静音；header 右栏改从 `getCommands()` 取真实命令补上 |
 | 用户消息、工具框、语法高亮 | 主题 | 只能改颜色，结构是 pi 内核画的 |
 | 消息流缩进、工具框骨架 | pi 内核 | 扩展 API 够不到 |
@@ -52,6 +54,8 @@
 
 **注意加载顺序**：`~/.pi/agent/extensions/` 是自动发现目录，加载顺序排在 `settings.json` 里的扩展之后。那里面任何调 `setHeader` / `setFooter` / `setEditorComponent` 的文件都会覆盖本扩展。`install.sh` 会扫描并列出这类文件。
 
+**与 `pi-working-phrase` 冲突**：`workingStats` 每 250ms 重写 working 行，会盖掉那个包的随机工作词。想留着它就设 `workingStats: false`，想要统计就二选一。
+
 ## 配置
 
 `~/.pi/agent/grok-tui.json`，改完 `/grok-tui reload`：
@@ -67,6 +71,9 @@
   "cursor": "bar",
   "completion": "above",
   "spinner": "braille",
+  "workingStats": true,
+  "workingLabel": "Working",
+  "collapseTools": true,
   "icons": "off",
   "footer": { "gitBranch": false, "thinking": false, "cost": false }
 }
@@ -80,6 +87,9 @@
 - `cursor` — `bar` 把光标交给终端自己画（用终端的 cursor-style）/ `block` 保留 pi 的反显方块
 - `completion` — `above` 补全向上展开 / `below` pi 的默认方向
 - `spinner` — `braille` 重心恒定的 braille 转圈（默认）/ `square` 方形帧但只有 4 帧 / `pi` 原生那组（会上下抖）
+- `workingStats` — working 行后面加秒数和输出 token
+- `workingLabel` — 那行前面的词
+- `collapseTools` — 启动时折叠工具输出。这只设初始状态，`Ctrl+O` 照常切换
 - `icons` — `off` 纯文字 / `nerd` 强制开 Nerd Font 图标 / `auto` 按终端类型猜。`PI_NERD_FONT=0` 可强制关
 - `footer.*` — 打开会多出 `| main +2`、`| high`、`| 0.31` 这几段
 
@@ -113,6 +123,13 @@ open prototype.html                 # 设计稿：对比、变体、色板、决
 ```
 
 主题文件是软链，编辑后 pi 会热重载。扩展改完要重启 pi 或 `/grok-tui reload`。
+
+## working 行的统计从哪来
+
+- **秒数**：`agent_start` 到 `agent_end` 之间计时，跨越整个 agent 运行——多轮工具调用不会重新计时。
+- **token**：`message_update` 事件带 `assistantMessageEvent.partial.usage`，取其中的 `output`。已结束的消息累加进 `settled`，正在流的记在 `streaming`，显示的是两者之和。
+
+**能不能实时跳动取决于 provider**：只有在流式过程中报告 usage 的 provider（如 Anthropic）才会看到 token 数一路涨；不报的就停在 0，直到消息结束才补上——这种情况下秒数照常走。
 
 ## 为什么换 spinner 帧
 
