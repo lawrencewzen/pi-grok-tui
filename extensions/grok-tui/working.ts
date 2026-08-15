@@ -1,4 +1,4 @@
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { estimateTokens, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { GrokTuiConfig } from "./config.ts";
 
 const TICK_MS = 250;
@@ -18,17 +18,23 @@ function formatTokens(n: number): string {
 /**
  * Appends elapsed time and output tokens to the working line.
  *
- * Tokens come from the streaming message's own usage, so they only move while a
- * provider reports usage mid-stream; when it doesn't, the count stays at zero
- * until the message ends and only the timer runs. Completed messages in the
- * same agent run are carried in `settled` so a multi-tool turn keeps counting up
- * instead of resetting per message.
+ * Providers on the OpenAI-compatible protocol only return usage in the final
+ * chunk (`stream_options: {include_usage: true}`), so a streaming message
+ * reports 0 output tokens until it ends — the count would sit still for the
+ * whole response and then jump. To keep the number live, the streaming message
+ * is estimated from its own text whenever the provider hasn't reported yet, and
+ * the display marks it `~`. Reported numbers always win once they arrive.
+ *
+ * Completed messages in the same agent run are carried in `settled`, so a
+ * multi-tool turn keeps counting up instead of resetting per message.
  */
 export function installWorkingStats(pi: ExtensionAPI, getConfig: () => GrokTuiConfig): void {
 	let timer: ReturnType<typeof setInterval> | undefined;
 	let startedAt = 0;
 	let settled = 0;
-	let streaming = 0;
+	// Held rather than measured per delta: message_update fires per token, while
+	// the line only repaints every TICK_MS.
+	let partial: Parameters<typeof estimateTokens>[0] | undefined;
 
 	const stop = (ctx: ExtensionContext) => {
 		if (timer) clearInterval(timer);
@@ -39,8 +45,12 @@ export function installWorkingStats(pi: ExtensionAPI, getConfig: () => GrokTuiCo
 	const paint = (ctx: ExtensionContext) => {
 		const config = getConfig();
 		const parts = [formatElapsed(Date.now() - startedAt)];
-		const tokens = settled + streaming;
-		if (tokens > 0) parts.push(`${formatTokens(tokens)} tok`);
+
+		const reported = partial?.role === "assistant" ? (partial.usage?.output ?? 0) : 0;
+		const estimated = reported === 0 && partial ? estimateTokens(partial) : 0;
+		const tokens = settled + reported + estimated;
+		if (tokens > 0) parts.push(`${estimated > 0 ? "~" : ""}${formatTokens(tokens)} tok`);
+
 		ctx.ui.setWorkingMessage(`${config.workingLabel} ${parts.join(" · ")}`);
 	};
 
@@ -48,22 +58,21 @@ export function installWorkingStats(pi: ExtensionAPI, getConfig: () => GrokTuiCo
 		if (!getConfig().enabled || !getConfig().workingStats || ctx.mode !== "tui") return;
 		startedAt = Date.now();
 		settled = 0;
-		streaming = 0;
+		partial = undefined;
 		paint(ctx);
 		timer = setInterval(() => paint(ctx), TICK_MS);
 		timer.unref?.();
 	});
 
-	pi.on("message_update", (event, ctx) => {
+	pi.on("message_update", (event) => {
 		if (!timer) return;
-		streaming = event.assistantMessageEvent.partial?.usage?.output ?? streaming;
-		paint(ctx);
+		partial = event.assistantMessageEvent.partial;
 	});
 
 	pi.on("message_end", (event) => {
 		if (!timer) return;
 		settled += event.message.role === "assistant" ? (event.message.usage?.output ?? 0) : 0;
-		streaming = 0;
+		partial = undefined;
 	});
 
 	pi.on("agent_end", (_event, ctx) => stop(ctx));

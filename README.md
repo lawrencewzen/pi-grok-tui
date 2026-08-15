@@ -127,9 +127,13 @@ open prototype.html                 # 设计稿：对比、变体、色板、决
 ## working 行的统计从哪来
 
 - **秒数**：`agent_start` 到 `agent_end` 之间计时，跨越整个 agent 运行——多轮工具调用不会重新计时。
-- **token**：`message_update` 事件带 `assistantMessageEvent.partial.usage`，取其中的 `output`。已结束的消息累加进 `settled`，正在流的记在 `streaming`，显示的是两者之和。
+- **token**：已结束的消息用 provider 报告的 `usage.output` 累加；正在流的那条，如果 provider 还没报，就用 `estimateTokens()` 按文本估算。
 
-**能不能实时跳动取决于 provider**：只有在流式过程中报告 usage 的 provider（如 Anthropic）才会看到 token 数一路涨；不报的就停在 0，直到消息结束才补上——这种情况下秒数照常走。
+**为什么需要估算**：走 OpenAI 兼容协议的 provider（DeepSeek 等）只在最后一个 chunk 里返回 usage（`stream_options: {include_usage: true}`），所以一整条回复流完之前，报告值都是 0——数字会一动不动然后突然跳。估算填掉这个空档，让它从第一秒就在走。
+
+**`~` 表示当前数字含估算成分**，provider 的真实数字一到就接管（`~712 tok` → `712 tok`）。估算按字符数换算，跟真实计费 token 有出入。
+
+估算只在每次重绘（250ms）时算一次，不是每个 token 都算——`message_update` 每个 delta 都会触发，那样太密。
 
 ## 为什么换 spinner 帧
 

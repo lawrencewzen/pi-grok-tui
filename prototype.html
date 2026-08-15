@@ -707,7 +707,7 @@
 			</div>
 			<div class="row">
 				<div class="what">working 行 <span class="badge ext">扩展</span></div>
-				<div class="detail"><code>Working 12s · 3.4k tok</code>，每 250ms 刷新。秒数从 <code>agent_start</code> 计到 <code>agent_end</code>，跨越整个 agent 运行；token 取 <code>message_update</code> 里 <code>partial.usage.output</code>，已结束的消息累加、正在流的单独记。<b>token 能否实时跳动取决于 provider</b>——不在流式过程中报 usage 的，会停在 0 直到消息结束。会覆盖 <code>pi-working-phrase</code> 的随机词。</div>
+				<div class="detail"><code>Working 12s · 3.4k tok</code>，每 250ms 刷新。秒数从 <code>agent_start</code> 计到 <code>agent_end</code>，跨整个 agent 运行。<br />token 这里有个坑：走 OpenAI 兼容协议的 provider（DeepSeek 等）只在<b>最后一个 chunk</b> 里返回 usage，所以一整条回复流完之前报告值都是 0，数字会僵住然后突然跳。用 <code>estimateTokens()</code> 按文本估算填掉这个空档，显示成 <code>~712 tok</code>；provider 的真实数字一到就接管，<code>~</code> 消失。会覆盖 <code>pi-working-phrase</code> 的随机词。</div>
 			</div>
 			<div class="row">
 				<div class="what">工具输出 <span class="badge ext">扩展</span></div>
