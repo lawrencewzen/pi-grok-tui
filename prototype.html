@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grok 风 pi TUI</title>
+<style>
+	/* ── tokens ─────────────────────────────────────────────
+	   Dark-first: the bare :root carries the `grok` palette,
+	   light overrides carry `grok-light`. Switching your
+	   system/appearance preview both real themes. */
+	:root {
+		/* Inherited from the user's Ghostty "Grok" theme so pi sits in the
+		   same world as everything else in that terminal. */
+		--bg: #141414;
+		--panel: #171717;
+		--raised: #1e1e1e;
+		--sunken: #1a1a1a;
+		--ok-bg: #1a1f19;
+		--err-bg: #201819;
+		--line: #333333;
+		--line-soft: #262626;
+		--text: #e1e1e1;
+		--muted: #a8a8a8;
+		--dim: #6b6b70;
+		--ink: #f5f5f5;
+		--blue: #a9c1cf;
+		--green: #a8b380;
+		--red: #c6787a;
+		--amber: #d8b173;
+		--code-blue: #8fa7b6;
+		--code-sky: #8bb8ae;
+		--code-mint: #a8b380;
+		--code-iris: #cbaac3;
+		--code-silver: #c4c4c4;
+
+		/* Maple Mono NF CN: Nerd Font icons + CJK in one family, so the
+		   terminal mockups below preview the real terminal font. */
+		--mono: "Maple Mono NF CN", "Maple Mono NF", "JetBrainsMono Nerd Font", ui-monospace, "SF Mono", Menlo, monospace;
+		--ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+	}
+
+	@media (prefers-color-scheme: light) {
+		:root:not([data-theme="dark"]) {
+			--bg: #ffffff;
+			--panel: #f7f9f9;
+			--raised: #eff3f4;
+			--sunken: #f2f5f6;
+			--ok-bg: #edf7f2;
+			--err-bg: #fdf0f1;
+			--line: #cfd9de;
+			--line-soft: #e7ecef;
+			--text: #0f1419;
+			--muted: #536471;
+			--dim: #8b98a5;
+			--ink: #0f1419;
+			--blue: #1d78c0;
+			--green: #00815a;
+			--red: #d1242f;
+			--amber: #9a6700;
+			--code-blue: #1a5f8a;
+			--code-sky: #116b8f;
+			--code-mint: #1a7f5a;
+			--code-iris: #6b4fa8;
+			--code-silver: #3c4a54;
+		}
+	}
+
+	:root[data-theme="light"] {
+		--bg: #ffffff;
+		--panel: #f7f9f9;
+		--raised: #eff3f4;
+		--sunken: #f2f5f6;
+		--ok-bg: #edf7f2;
+		--err-bg: #fdf0f1;
+		--line: #cfd9de;
+		--line-soft: #e7ecef;
+		--text: #0f1419;
+		--muted: #536471;
+		--dim: #8b98a5;
+		--ink: #0f1419;
+		--blue: #1d78c0;
+		--green: #00815a;
+		--red: #d1242f;
+		--amber: #9a6700;
+		--code-blue: #1a5f8a;
+		--code-sky: #116b8f;
+		--code-mint: #1a7f5a;
+		--code-iris: #6b4fa8;
+		--code-silver: #3c4a54;
+	}
+
+	* { box-sizing: border-box; }
+
+	body {
+		margin: 0;
+		background: var(--bg);
+		color: var(--text);
+		font-family: var(--ui);
+		font-size: 15px;
+		line-height: 1.7;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	.wrap {
+		max-width: 1080px;
+		margin: 0 auto;
+		padding: 72px 28px 120px;
+		display: flex;
+		flex-direction: column;
+		gap: 72px;
+	}
+
+	/* ── type ───────────────────────────────────────────── */
+	h1, h2, h3 { margin: 0; font-weight: 600; text-wrap: balance; letter-spacing: -0.01em; }
+	h1 { font-size: 34px; line-height: 1.25; color: var(--ink); }
+	h2 { font-size: 21px; color: var(--ink); }
+	h3 { font-size: 15px; }
+	p { margin: 0; }
+
+	.eyebrow {
+		font-family: var(--mono);
+		font-size: 11px;
+		letter-spacing: 0.16em;
+		text-transform: uppercase;
+		color: var(--dim);
+	}
+
+	.lede { color: var(--muted); max-width: 62ch; }
+	.note { color: var(--dim); font-size: 13.5px; max-width: 68ch; }
+
+	section { display: flex; flex-direction: column; gap: 22px; }
+	.section-head { display: flex; flex-direction: column; gap: 8px; }
+	hr { border: 0; border-top: 1px solid var(--line-soft); margin: 0; }
+
+	/* ── terminal frame ─────────────────────────────────── */
+	.term {
+		background: var(--panel);
+		border: 1px solid var(--line);
+		font-family: var(--mono);
+		font-size: 12.5px;
+		line-height: 1.62;
+		overflow-x: auto;
+	}
+
+	.term-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding: 7px 12px;
+		border-bottom: 1px solid var(--line-soft);
+		font-size: 11px;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--dim);
+		background: var(--bg);
+	}
+	.term-bar .tag { color: var(--muted); text-transform: none; letter-spacing: 0; }
+
+	.screen { padding: 16px 16px 14px; min-width: 460px; display: flex; flex-direction: column; }
+	.screen > * { flex: none; }
+
+	/* ── terminal atoms ─────────────────────────────────── */
+	.t-dim { color: var(--dim); }
+	.t-muted { color: var(--muted); }
+	.t-ink { color: var(--ink); }
+	.t-blue { color: var(--blue); }
+	.t-green { color: var(--green); }
+	.t-red { color: var(--red); }
+	.b { font-weight: 600; }
+
+	.hair { height: 1px; background: var(--line-soft); margin: 12px 0; }
+	.gap-sm { height: 10px; }
+	.gap { height: 18px; }
+
+	.user-msg { background: var(--raised); padding: 8px 12px; color: var(--text); }
+	.tool {
+		padding: 7px 12px;
+		background: var(--sunken);
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+	.tool.ok { background: var(--ok-bg); }
+	.tool.err { background: var(--err-bg); }
+	.tool-title { color: var(--text); }
+	.tool-title .arg { color: var(--muted); }
+
+	/* editor: square hairline frame, no accent rail */
+	.editor {
+		border: 1px solid var(--line);
+		padding: 6px 12px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: var(--dim);
+	}
+	/* the terminal's own caret, not a reverse-video cell */
+	.cursor-bar { color: var(--amber); animation: blink 1.1s step-end infinite; }
+	@keyframes blink { 50% { opacity: 0; } }
+	@media (prefers-reduced-motion: reduce) { .cursor-bar { animation: none; } }
+	/* Own class name: `.row` belongs to the spec tables and carries a border. */
+	.completion { padding: 0 2px 6px; display: flex; flex-direction: column; }
+	.completion .cand { color: var(--muted); }
+	.completion .cand.on { color: var(--ink); }
+	.completion .cand .desc { color: var(--dim); }
+	.completion .count { color: var(--dim); }
+	.editor.thinking-high { border-color: #c4c4c4; }
+	:root[data-theme="light"] .editor.thinking-high { border-color: #2b3740; }
+	@media (prefers-color-scheme: light) {
+		:root:not([data-theme="dark"]) .editor.thinking-high { border-color: #2b3740; }
+	}
+
+	.footer-line {
+		color: var(--dim);
+		font-variant-numeric: tabular-nums;
+		padding-top: 10px;
+	}
+	.footer-line .sep { color: var(--line); padding: 0 6px; }
+	.footer-line .bar { color: var(--line); padding: 0 7px; }
+	/* icons sit one step darker than the text they label */
+	.footer-line .ico { color: #4a4a4e; }
+	.footer-line .ico.bright { color: var(--ink); }
+	@media (prefers-color-scheme: light) {
+		:root:not([data-theme="dark"]) .footer-line .ico { color: #a9b6bd; }
+	}
+	:root[data-theme="light"] .footer-line .ico { color: #a9b6bd; }
+	:root[data-theme="light"] .footer-line .ico.bright,
+	.footer-line .ico.bright { color: var(--ink); }
+
+	/* open-tui's own icon coloring, for the side-by-side */
+	.icon-c1 { color: #7fb3d5; }
+	.icon-c2 { color: #c98a7a; }
+	.icon-c3 { color: #7fc7a4; }
+
+	/* working indicator — pi's default braille spinner, kept as-is */
+	.spin { color: var(--muted); display: inline-block; width: 1ch; }
+
+	/* the "before" screen: a faithful redraw of pi-open-tui's header.
+	   Its logo is static and single-colored — the animation frames in
+	   the source are dead code. */
+	.old-header { border: 1px solid var(--line); border-radius: 6px; }
+	.old-header .cap {
+		border-bottom: 1px solid var(--line);
+		padding: 1px 10px;
+		color: var(--ink);
+		font-size: 11.5px;
+	}
+	.old-header .cols { display: grid; grid-template-columns: 1.55fr 1fr; }
+	.old-header .left { padding: 8px 10px; text-align: center; border-right: 1px solid var(--line); }
+	.old-header .right { padding: 8px 10px; }
+	.logo-art { color: var(--ink); white-space: pre; display: inline-block; text-align: left; line-height: 1.15; }
+	.old-header .tagline { color: var(--text); font-weight: 600; padding-top: 6px; }
+	.old-header .meta { color: var(--muted); }
+	.old-header .cwd { color: var(--dim); }
+	.old-header .h { color: var(--ink); font-weight: 600; }
+	.old-header .cmd { color: var(--muted); }
+	.old-header .div { color: var(--ink); }
+	.old-editor {
+		border: 1px solid var(--line);
+		border-radius: 8px;
+		padding: 6px 12px 6px 10px;
+		border-left: 3px solid var(--ink);
+		color: var(--dim);
+	}
+	.old-footer { color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 10px; }
+	.old-footer .icon { color: var(--ink); }
+	.old-footer .row2 { color: var(--dim); }
+
+	/* ── header variants ────────────────────────────────── */
+	.variants { display: grid; gap: 20px; }
+	.hdr {
+		border: 1px solid var(--line);
+		display: grid;
+		grid-template-columns: 1.5fr 1fr;
+	}
+	.hdr .cap {
+		grid-column: 1 / -1;
+		border-bottom: 1px solid var(--line);
+		padding: 2px 12px;
+		color: var(--dim);
+	}
+	.hdr .l { padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+	.hdr .r { padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; border-left: 1px solid var(--line-soft); }
+	.hdr.plain { border: 0; }
+	.hdr.plain .l { padding-left: 0; }
+	.hdr.plain .r { border-left: 0; }
+	.hdr .tag-line { color: var(--text); font-weight: 600; padding-top: 8px; }
+	.hdr .meta { color: var(--muted); }
+	.hdr .cwd { color: var(--dim); }
+	.hdr .h { color: var(--ink); font-weight: 600; }
+	.hdr .item { color: var(--dim); }
+	.hdr .rule { color: var(--line); }
+	.pi-logo { color: var(--ink); white-space: pre; line-height: 1.12; font-size: 12.5px; }
+
+	.replay {
+		font-family: var(--mono);
+		font-size: 11px;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		background: transparent;
+		border: 1px solid var(--line);
+		color: var(--muted);
+		padding: 4px 12px;
+		cursor: pointer;
+	}
+	.replay:hover { border-color: var(--ink); color: var(--ink); }
+	.replay:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+	.anim-stage { display: flex; align-items: flex-end; gap: 26px; min-height: 92px; }
+	.anim-stage .frame-no { color: var(--dim); font-size: 11px; }
+	#anim { white-space: pre; line-height: 1.12; }
+	.cell-idle { color: var(--dim); }
+	.cell-set { color: var(--muted); }
+	.cell-done { color: var(--ink); }
+	.cell-flash { color: var(--text); }
+
+	/* ── compare grid ───────────────────────────────────── */
+	.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+	@media (max-width: 860px) { .compare { grid-template-columns: 1fr; } }
+
+	/* ── annotation badges ──────────────────────────────── */
+	.rows { display: flex; flex-direction: column; gap: 14px; }
+	.row {
+		display: grid;
+		grid-template-columns: 132px 1fr;
+		gap: 20px;
+		align-items: start;
+		padding-bottom: 14px;
+		border-bottom: 1px solid var(--line-soft);
+	}
+	.row:last-child { border-bottom: 0; padding-bottom: 0; }
+	@media (max-width: 620px) { .row { grid-template-columns: 1fr; gap: 6px; } }
+	.row .what { font-family: var(--mono); font-size: 12.5px; color: var(--text); padding-top: 2px; }
+	.row .detail { color: var(--muted); font-size: 14px; }
+	.row .detail b { color: var(--text); font-weight: 600; }
+
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		font-family: var(--mono);
+		font-size: 10.5px;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		padding: 2px 7px;
+		border: 1px solid var(--line);
+		color: var(--muted);
+		white-space: nowrap;
+	}
+	.badge.ext { border-color: var(--ink); color: var(--ink); }
+	.badge.theme { border-color: var(--line); color: var(--muted); }
+	.badge.fixed { border-color: var(--line-soft); color: var(--dim); }
+
+	.legend { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+	.legend span { color: var(--dim); font-size: 13px; }
+
+	/* ── swatches ───────────────────────────────────────── */
+	.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 1px; background: var(--line-soft); border: 1px solid var(--line-soft); }
+	.sw { background: var(--bg); padding: 12px 13px; display: flex; flex-direction: column; gap: 7px; }
+	.chip { height: 30px; border: 1px solid var(--line-soft); }
+	.sw .name { font-family: var(--mono); font-size: 12px; color: var(--text); }
+	.sw .hex { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.04em; }
+	.sw .use { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+	.callout {
+		border-left: 2px solid var(--ink);
+		padding: 2px 0 2px 16px;
+		color: var(--muted);
+		max-width: 66ch;
+	}
+	.callout b { color: var(--text); font-weight: 600; }
+
+	code {
+		font-family: var(--mono);
+		font-size: 0.88em;
+		color: var(--code-sky);
+	}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+	<header class="section-head">
+		<p class="eyebrow">pi tui · 设计初稿</p>
+		<h1>Grok 风 pi TUI</h1>
+		<p class="lede">
+			配色直接继承你 Ghostty 的 Grok 主题（画布 #141414、暖调低饱和 palette），在它之上按 Grok 的语言组织：灰阶做层次、白当强调色、彩色只在有语义时出现。
+			这一版不只是配色——同时用扩展接管 header、footer 和编辑器：启动横幅的结构留下、材质换掉，footer 压成三段，spinner 保持 pi 原样。
+		</p>
+		<p class="note">本页用这套配色和你的终端字体（Maple Mono NF CN）渲染，所见即终端所得。<b>标了「已装」的部分都已实机跑过</b>，实机推翻的决定也记在原处。切换系统外观可预览浅色版。</p>
+	</header>
+
+	<section>
+		<div class="section-head">
+			<p class="eyebrow">01 · 差别在哪</p>
+			<h2>现状与新设计的同屏对比</h2>
+			<p class="note">左边是你现在的界面（<code>pi-open-tui</code>：12 行启动横幅、双行 starship footer、圆角 + 导轨编辑框），按它 <code>header.ts</code> 的源码复刻。右边是新设计。</p>
+		</div>
+
+		<div class="compare">
+			<div class="term">
+				<div class="term-bar"><span>现状</span><span class="tag">pi-open-tui</span></div>
+				<div class="screen">
+					<div class="old-header">
+						<div class="cap">Pi v0.84.2</div>
+						<div class="cols">
+							<div class="left">
+<span class="logo-art">█████████
+███   ███
+██████   ███
+███      ███</span>
+								<div class="tagline">Let's build something great</div>
+								<div class="meta">deepseek-chat · high</div>
+								<div class="cwd">~/Projects/pi-tui-theme</div>
+							</div>
+							<div class="right">
+								<div class="h">Welcome</div>
+								<div class="cmd">Ask Pi anything</div>
+								<div class="div">──────────</div>
+								<div class="h">Commands</div>
+								<div class="cmd">/open-tui</div>
+								<div class="cmd">/export</div>
+								<div class="cmd">/settings</div>
+							</div>
+						</div>
+					</div>
+					<div class="gap"></div>
+					<div class="user-msg">重构 auth 中间件</div>
+					<div class="gap-sm"></div>
+					<div class="t-muted"><span class="spin" data-spin>⠋</span> Working… 4.2s</div>
+					<div class="gap"></div>
+					<div class="old-editor">›&nbsp;</div>
+					<div class="old-footer">
+						<span class="icon">󰉋</span> ~/p/pi-tui-theme&nbsp;&nbsp;<span class="icon">󰘬</span> main +2 ~1&nbsp;&nbsp;<span class="icon">󰎙</span> node 22
+						<div class="row2">deepseek-chat&nbsp;&nbsp;▮▮▯▯▯ 12%&nbsp;&nbsp;↑567 ↓1.2k&nbsp;&nbsp;$0.31</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="term">
+				<div class="term-bar"><span>新设计</span><span class="tag">grok</span></div>
+				<div class="screen">
+					<div class="t-dim">pi <span class="sep">·</span> deepseek-chat <span class="sep">·</span> ~/Projects/pi-tui-theme</div>
+					<div class="hair"></div>
+					<div class="user-msg">重构 auth 中间件</div>
+					<div class="gap-sm"></div>
+					<div class="t-muted"><span class="spin" data-spin>⠋</span> 思考中 <span class="t-dim">4s</span></div>
+					<div class="gap"></div>
+					<div class="gap"></div>
+					<div class="gap"></div>
+					<div class="gap"></div>
+					<div class="editor"><span class="cursor-bar">▏</span><span>问点什么</span></div>
+					<div class="footer-line">
+						~/Projects/pi-tui-theme<span class="bar">|</span>DeepSeek Chat<span class="bar">|</span>86% left
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="legend">
+			<span class="badge ext">扩展</span><span>布局可以重写</span>
+			<span class="badge theme">主题</span><span>只能改颜色</span>
+			<span class="badge fixed">内核</span><span>结构固定</span>
+		</div>
+	</section>
+
+	<hr />
+
+	<section>
+		<div class="section-head">
+			<p class="eyebrow">02 · header</p>
+			<h2>横幅留下，换成 Grok 的说法</h2>
+			<p class="note">open-tui 的结构是对的：logo 立在左边、命令提示排在右边、整块框住。改的是材质——彩色换白、圆角换直角、粗框换 hairline、tagline 收进灰阶。三个变体，从保留最多到最少。</p>
+		</div>
+
+		<div class="variants">
+			<div class="term">
+				<div class="term-bar"><span>变体 A · 完整结构</span><span class="tag">已实现</span></div>
+				<div class="screen">
+					<div class="hdr">
+						<div class="cap">pi v0.84.2</div>
+						<div class="l">
+							<div class="pi-logo">█████████
+███   ███
+██████   ███
+███      ███</div>
+							<div class="tag-line">Let's build something great</div>
+							<div class="meta">DeepSeek Chat · high</div>
+							<div class="cwd">~/Projects/pi-tui-theme</div>
+						</div>
+						<div class="r">
+							<div class="h">Welcome</div>
+							<div class="item">Ask Pi anything</div>
+							<div class="rule">──────────</div>
+							<div class="h">Commands 12</div>
+							<div class="item">/pi-subagents</div>
+							<div class="item">/parallel-review</div>
+							<div class="item">/review-loop</div>
+							<div class="item">/settings</div>
+							<div class="rule">/help for all</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="term">
+				<div class="term-bar"><span>变体 B · 去框</span><span class="tag">推荐</span></div>
+				<div class="screen">
+					<div class="hdr plain">
+						<div class="l">
+							<div class="pi-logo">█████████
+███   ███
+██████   ███
+███      ███</div>
+							<div class="meta" style="padding-top: 8px">DeepSeek Chat · high</div>
+							<div class="cwd">~/Projects/pi-tui-theme</div>
+						</div>
+						<div class="r">
+							<div class="h">Commands 12</div>
+							<div class="item">/pi-subagents</div>
+							<div class="item">/parallel-review</div>
+							<div class="item">/review-loop</div>
+							<div class="item">/settings</div>
+							<div class="rule">/help for all</div>
+						</div>
+					</div>
+					<div class="hair"></div>
+				</div>
+			</div>
+
+			<div class="term">
+				<div class="term-bar"><span>变体 C · 只留 logo</span><span class="tag">最克制</span></div>
+				<div class="screen">
+					<div class="hdr plain" style="grid-template-columns: 1fr">
+						<div class="l">
+							<div class="pi-logo">█████████
+███   ███
+██████   ███
+███      ███</div>
+							<div class="cwd" style="padding-top: 8px">DeepSeek Chat · high · ~/Projects/pi-tui-theme</div>
+						</div>
+					</div>
+					<div class="hair"></div>
+				</div>
+			</div>
+		</div>
+
+		<div class="section-head" style="padding-top: 12px">
+			<h3>顺手把原版没做的动画补上</h3>
+			<p class="note">
+				那 22 帧不是白写的——三块拼图分别从上方滑到位，拼成 π，闪两下定格。原版把它冻在最后一帧，从没播过。
+				我们按 Grok 的语言重放：滑入中的块是暗灰，就位后转中灰，组装完成定格纯白。启动时播一次，约 1.5 秒。
+				<br />渲染窗口在两个轴上都是固定的：按帧裁剪、或者播完把空行收掉，都会让整块 logo 跳一下——第一版就是这么跳的。现在最后五帧位置完全静止，只有颜色在变。
+			</p>
+		</div>
+
+		<div class="term">
+			<div class="term-bar"><span>启动动画</span><span class="tag">70ms / 帧 · 位置固定</span></div>
+			<div class="screen">
+				<div class="anim-stage">
+					<div id="anim"></div>
+					<div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start">
+						<span class="frame-no" id="frame-no">frame 0 / 22</span>
+						<button class="replay" id="replay" type="button">重播</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<hr />
+
+	<section>
+		<div class="section-head">
+			<p class="eyebrow">03 · 完整一屏</p>
+			<h2>一次真实对话长什么样</h2>
+		</div>
+
+		<div class="term">
+			<div class="term-bar"><span>grok · 深色</span><span class="tag">80 × 30</span></div>
+			<div class="screen">
+				<div class="hdr plain">
+					<div class="l">
+						<div class="pi-logo">█████████
+███   ███
+██████   ███
+███      ███</div>
+						<div class="meta" style="padding-top: 8px">DeepSeek Chat · high</div>
+						<div class="cwd">~/Projects/pi-tui-theme</div>
+					</div>
+					<div class="r">
+						<div class="h">Commands 12</div>
+						<div class="item">/pi-subagents</div>
+						<div class="item">/parallel-review</div>
+						<div class="item">/review-loop</div>
+						<div class="item">/settings</div>
+						<div class="rule">/help for all</div>
+					</div>
+				</div>
+				<div class="hair"></div>
+
+				<div class="user-msg">重构 auth 中间件，把 token 校验抽成独立函数</div>
+				<div class="gap-sm"></div>
+
+				<div class="t-muted"><span class="spin" data-spin>⠋</span> 思考中 <span class="t-dim">4s</span></div>
+				<div class="gap-sm"></div>
+
+				<div class="t-dim">先看现有的中间件签名，再决定拆分边界。</div>
+				<div class="gap-sm"></div>
+
+				<div class="b t-ink">验证流程</div>
+				<div><span class="t-dim">·</span> 解析 <span style="color: var(--code-sky)">Authorization</span> 头</div>
+				<div><span class="t-dim">·</span> 参考 <span class="t-blue">RFC 6750</span> <span class="t-dim">datatracker.ietf.org</span></div>
+				<div class="gap-sm"></div>
+
+				<div class="tool ok">
+					<div class="tool-title"><span class="b">edit</span> <span class="arg">src/auth.ts</span></div>
+					<div class="t-muted">&nbsp;export function verify(req) {</div>
+					<div class="t-red">-&nbsp;&nbsp;const t = req.headers.auth</div>
+					<div class="t-green">+&nbsp;&nbsp;const t = parseBearer(req)</div>
+					<div class="t-muted">&nbsp;}</div>
+				</div>
+				<div class="gap-sm"></div>
+
+				<div class="tool">
+					<div class="tool-title"><span class="b">bash</span> <span class="arg">npm test</span></div>
+					<div class="t-muted">42 passing</div>
+				</div>
+				<div class="gap-sm"></div>
+
+				<div class="tool err">
+					<div class="tool-title"><span class="b">bash</span> <span class="arg">npm run lint</span></div>
+					<div class="t-red">2 problems (2 errors)</div>
+				</div>
+				<div class="gap-sm"></div>
+
+				<div>
+					<span style="color: var(--dim)">// verify a bearer token</span><br />
+					<span style="color: var(--code-blue)">export async function</span> <span class="t-ink">parseBearer</span><span class="t-dim">(</span><span style="color: var(--code-silver)">req</span><span class="t-muted">:</span> <span style="color: var(--code-sky)">Request</span><span class="t-dim">)</span> <span class="t-dim">{</span><br />
+					&nbsp;&nbsp;<span style="color: var(--code-blue)">const</span> <span style="color: var(--code-silver)">raw</span> <span class="t-muted">=</span> <span style="color: var(--code-silver)">req</span><span class="t-dim">.</span><span class="t-ink">header</span><span class="t-dim">(</span><span style="color: var(--code-mint)">"authorization"</span><span class="t-dim">)</span><br />
+					&nbsp;&nbsp;<span style="color: var(--code-blue)">if</span> <span class="t-dim">(</span><span style="color: var(--code-silver)">raw</span><span class="t-dim">.</span><span style="color: var(--code-silver)">length</span> <span class="t-muted">&lt;</span> <span style="color: var(--code-iris)">8</span><span class="t-dim">)</span> <span style="color: var(--code-blue)">throw</span> <span class="t-ink">unauthorized</span><span class="t-dim">()</span><br />
+					<span class="t-dim">}</span>
+				</div>
+				<div class="gap"></div>
+
+				<div class="editor thinking-high"><span class="cursor-bar">▏</span><span>问点什么</span></div>
+				<div class="footer-line">
+					~/Projects/pi-tui-theme<span class="bar">|</span>DeepSeek Chat<span class="bar">|</span>86% left
+				</div>
+			</div>
+		</div>
+
+		<p class="note">编辑框的边框颜色随 thinking 等级由灰到白递进（上图是 high，接近纯白）；只有 max 会跳到琥珀。这是唯一保留的"状态用颜色说话"的地方。光标交给终端自己画——你 Ghostty 的 <code>cursor-style = bar</code> 就是这条闪动的竖线，pi 那个反显方块被剥掉了。</p>
+
+		<div class="term">
+			<div class="term-bar"><span>输入补全</span><span class="tag">向上展开，框外</span></div>
+			<div class="screen">
+				<div class="completion">
+					<div class="count">(1/52)</div>
+					<div class="cand">&nbsp;&nbsp;export<span class="desc">            Export session</span></div>
+					<div class="cand">&nbsp;&nbsp;scoped-models<span class="desc">     Enable/disable models for Ctrl+P</span></div>
+					<div class="cand">&nbsp;&nbsp;model<span class="desc">             &lt;provider/model&gt; — Select model</span></div>
+					<div class="cand on">→ settings<span class="desc">          Open settings menu</span></div>
+				</div>
+				<div class="editor"><span>/</span><span class="cursor-bar">▏</span></div>
+				<div class="footer-line">~/Projects/pi-tui-theme<span class="bar">|</span>DeepSeek Chat<span class="bar">|</span>86% left</div>
+			</div>
+		</div>
+
+		<p class="note">
+			补全面板是 pi 自己渲染的，必须留在框外——第一版把它一起包进框里，框的底边就被吃掉了。定位方式是从后往前找 pi 画的最后一条 <code>─</code> 规则线，它之后的行原样透传。
+			<br />pi 默认把面板挂在输入框下方；这里把这段行挪到框之前，候选就向上展开——输入框留在眼睛已经在的位置，候选朝对话方向长，跟 shell 的补全菜单一个方向。<code>completion: "below"</code> 可以切回去。
+		</p>
+	</section>
+
+	<hr />
+
+	<section>
+		<div class="section-head">
+			<p class="eyebrow">04 · 谁管什么</p>
+			<h2>每个区域能改到什么程度</h2>
+			<p class="note">这是上一版"看不出差别"的原因：pi 的主题只有 51 个颜色 token，碰不到任何布局。下面标了每块归谁管。</p>
+		</div>
+
+		<div class="rows">
+			<div class="row">
+				<div class="what">header <span class="badge ext">扩展</span></div>
+				<div class="detail"><b>结构留下，材质换掉。</b>方块 π、右栏命令提示、两栏布局都保留；圆角框换直角 hairline、彩色换白、tagline 收进灰阶。<b>另外把原版没播的动画补上：</b>包的 README 宣传"16 帧变色动画"，但 <code>header.ts</code> 写死了 <code>frame = LOGO_FRAMES.length - 1</code>——只渲染最后一帧，22 帧数据是死代码。我们把它真正跑起来，单色重放，启动时播一次。</div>
+			</div>
+			<div class="row">
+				<div class="what">启动清单 <span class="badge fixed">内核</span></div>
+				<div class="detail">那段 <code>[Skills] [Prompts] [Extensions] [Themes]</code> 是 pi 自己画的可展开区块，扩展替换不了，只能用 <code>quietStartup: true</code> 静音——安装脚本已经设上，<code>--uninstall</code> 会删掉这个键。<b>信息没有丢：</b><code>getCommands()</code> 带 <code>source: "extension" | "prompt" | "skill"</code>，header 右栏改成从这里取真实命令，优先显示你自己装的 skill 和 prompt，并给出总数。诊断和冲突警告不受静音影响，照常显示。</div>
+			</div>
+			<div class="row">
+				<div class="what">footer <span class="badge ext">扩展</span></div>
+				<div class="detail"><b>双行 starship 压成单行三段：</b><code>cwd | 模型 | 剩余上下文</code>，<code>|</code> 分隔、全 dim 灰、无 Nerd Font 图标、无进度条方块。git 状态、runtime 检测、token 上下行、花费、TPS 弹条全部去掉。</div>
+			</div>
+			<div class="row">
+				<div class="what">编辑器 <span class="badge ext">扩展</span></div>
+				<div class="detail"><b>去掉圆角和左侧彩色导轨。</b>改成方角单线细框，左侧一个白色 <code>›</code>。边框颜色继续承载 thinking 等级和 bash 模式。</div>
+			</div>
+			<div class="row">
+				<div class="what">加载指示器 <span class="badge ext">扩展</span></div>
+				<div class="detail"><b>不换成呼吸点，但换了帧。</b>pi 原生的 <code>⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏</code> 是两点在 2×4 braille 点阵里绕圈，实测（Maple Mono NF CN，1/1000 em）重心在 340–553 之间移动、跳动 213 ≈ 字号 21%，所以 spinner 相对 working 文字上下浮。改用 <code>⣾⣽⣻⢿⡿⣟⣯⣷</code>——八点亮七点、转的是缺口，每帧包围盒相同，重心恒定 340。<br />也试过方形的 <code>◧◩◨◪</code>（600×600 正方形、同样零抖动），但 Unicode 里这类方形部分填充字符只有 4 个，帧数减半后动画明显更跳，观感不如点阵转圈——留作 <code>spinner: "square"</code> 选项。</div>
+			</div>
+			<div class="row">
+				<div class="what">用户消息 <span class="badge theme">主题</span></div>
+				<div class="detail">块状灰底是 pi 内核画的，扩展改不了结构——只能把底色定成 <code>#16181a</code>，接近 Grok 那个几乎与背景融合的气泡。</div>
+			</div>
+			<div class="row">
+				<div class="what">工具框 <span class="badge theme">主题</span></div>
+				<div class="detail">三态背景（等待 / 成功 / 失败）只能换颜色。这里用极低饱和的中性、暗绿、暗红，压到几乎看不出色相，只在余光里能分辨状态。</div>
+			</div>
+			<div class="row">
+				<div class="what">语法高亮 <span class="badge theme">主题</span></div>
+				<div class="detail">函数名用白、关键字柔蓝、字符串柔绿、数字淡紫，其余走灰阶。整块代码远看仍是单色，凑近才有结构。</div>
+			</div>
+			<div class="row">
+				<div class="what">消息流布局 <span class="badge fixed">内核</span></div>
+				<div class="detail">缩进、换行、工具框的框架结构由 pi 自己渲染，扩展 API 够不到。真要动得改 pi 源码——不建议。</div>
+			</div>
+		</div>
+	</section>
+
+	<hr />
+
+	<section>
+		<div class="section-head">
+			<p class="eyebrow">05 · footer 规格</p>
+			<h2>三段，管道符分隔</h2>
+			<p class="note">按你给的格式定稿。每段的数据都从 pi 的公开 API 取得。</p>
+		</div>
+
+		<div class="variants">
+			<div class="term">
+				<div class="term-bar"><span>1 · 纯文字</span><span class="tag">已实现 · 默认</span></div>
+				<div class="screen">
+					<div class="footer-line" style="padding: 0">~/Projects/pi-tui-theme<span class="bar">|</span>DeepSeek Chat<span class="bar">|</span>86% left</div>
+				</div>
+			</div>
+
+			<div class="term">
+				<div class="term-bar"><span>2 · 图标走灰阶</span><span class="tag">可选 · icons: "nerd"</span></div>
+				<div class="screen">
+					<div class="footer-line" style="padding: 0">
+						<span class="ico">󰉋</span> ~/Projects/pi-tui-theme<span class="bar">|</span><span class="ico">󰚩</span> DeepSeek Chat<span class="bar">|</span><span class="ico">󰄉</span> 86% left
+					</div>
+					<div class="gap-sm"></div>
+					<div class="footer-line" style="padding: 0">
+						<span class="ico">󰉋</span> ~/Projects/pi-tui-theme<span class="bar">|</span><span class="ico">󰘬</span> main +2<span class="bar">|</span><span class="ico">󰚩</span> DeepSeek Chat<span class="bar">|</span><span class="ico">󰄉</span> 86% left<span class="bar">|</span><span class="ico"></span> 0.31
+					</div>
+				</div>
+			</div>
+
+			<div class="term">
+				<div class="term-bar"><span>3 · 图标提亮</span><span class="tag">未实现</span></div>
+				<div class="screen">
+					<div class="footer-line" style="padding: 0">
+						<span class="ico bright">󰉋</span> ~/Projects/pi-tui-theme<span class="bar">|</span><span class="ico bright">󰚩</span> DeepSeek Chat<span class="bar">|</span><span class="ico bright">󰄉</span> 86% left
+					</div>
+					<div class="gap-sm"></div>
+					<div class="footer-line" style="padding: 0">
+						<span class="ico bright">󰉋</span> ~/Projects/pi-tui-theme<span class="bar">|</span><span class="ico bright">󰘬</span> main +2<span class="bar">|</span><span class="ico bright">󰚩</span> DeepSeek Chat<span class="bar">|</span><span class="ico bright">󰄉</span> 86% left<span class="bar">|</span><span class="ico bright"></span> 0.31
+					</div>
+				</div>
+			</div>
+
+			<div class="term">
+				<div class="term-bar"><span>对照 · 现状</span><span class="tag">open-tui 的彩色图标</span></div>
+				<div class="screen">
+					<div class="old-footer" style="padding: 0">
+						<span class="icon-c1">󰉋</span> ~/p/pi-tui-theme&nbsp;&nbsp;<span class="icon-c2">󰘬</span> main +2 ~1&nbsp;&nbsp;<span class="icon-c3">󰎙</span> node 22
+						<div class="row2">deepseek-chat&nbsp;&nbsp;▮▮▯▯▯ 12%&nbsp;&nbsp;↑567 ↓1.2k&nbsp;&nbsp;$0.31</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<p class="note">
+			<b>实机跑下来选了纯文字。</b>图标本身不违背 Grok 的语言，但在真实终端里，那三个字形跟它们标注的文字挨得太近，读起来是噪音而不是标记——设计稿上成立的东西，实机不成立。
+			<br />灰阶图标仍然留在代码里，<code>grok-tui.json</code> 里把 <code>icons</code> 设成 <code>"nerd"</code> 就回来（实现时把颜色从 <code>#4a4a4e</code> 提到主题的 <code>dim</code>，否则在 <code>#141414</code> 上几乎看不见）。变体 3 没有实现。
+		</p>
+
+		<div class="rows">
+			<div class="row">
+				<div class="what">~/Projects/…</div>
+				<div class="detail">当前目录，家目录缩成 <code>~</code>，中间层级不截断。来源 <code>ctx.cwd</code>。</div>
+			</div>
+			<div class="row">
+				<div class="what">DeepSeek Chat</div>
+				<div class="detail">模型展示名，不是 <code>provider/id</code> 那种斜杠形式。来源 <code>ctx.model.name</code>——pi 的模型对象自带这个字段，open-tui 没用它，所以你现在看到的是 <code>deepseek/deepseek-chat</code>。</div>
+			</div>
+			<div class="row">
+				<div class="what">86% left</div>
+				<div class="detail">剩余上下文。来源 <code>ctx.getContextUsage()</code>，用 100 减去已用百分比。快满时（&lt; 20%）转琥珀，&lt; 10% 转红——这是 footer 里唯一会出现颜色的地方。</div>
+			</div>
+			<div class="row">
+				<div class="what">5h / 7d <span class="badge fixed">拿不到</span></div>
+				<div class="detail">你给的原格式里那两段订阅窗口是 Claude Code 的。<b>pi 里没有对应数据</b>：pi 不追踪 Anthropic 的 5h/7d 限额，而你的 pi 只配了 deepseek 凭证 + 本地 ling-3.0，两者都没有订阅窗口的概念。<br />真要显示额度得像 <code>pi-grok-usage</code>、<code>pi-deepseek-usage</code> 那样自己去调 provider 的用量接口——DeepSeek 那个查的是账户余额，不是时间窗口。以后你换成订阅制 provider，再按同样方式加一段。</div>
+			</div>
+		</div>
+
+		<p class="note">要加段随时说，位置和写法都定好了：git 分支（<code>| main +2</code>）、本次花费（<code>| $0.31</code>）、thinking 等级（<code>| high</code>）。</p>
+	</section>
+
+	<hr />
+
+	<section>
+		<div class="section-head">
+			<p class="eyebrow">06 · 色板</p>
+			<h2>三条规则撑起整套配色</h2>
+			<p class="note">强调色是白不是彩色；层次靠灰阶不靠色相；彩色只在有语义时出现。<b>所有彩色都取自你 Ghostty 主题的 palette</b>，所以 pi 跟同一个终端里的 ls、git、vim 是一套颜色。</p>
+		</div>
+
+		<div class="swatches">
+			<div class="sw"><div class="chip" style="background: #f5f5f5"></div><div class="name">ink</div><div class="hex">#f5f5f5</div><div class="use">强调：选中、标题、高亮边框</div></div>
+			<div class="sw"><div class="chip" style="background: #e1e1e1"></div><div class="name">text</div><div class="hex">#e1e1e1</div><div class="use">正文 · 等于终端 foreground</div></div>
+			<div class="sw"><div class="chip" style="background: #a8a8a8"></div><div class="name">muted</div><div class="hex">#a8a8a8</div><div class="use">次要文本、工具输出 · palette 7</div></div>
+			<div class="sw"><div class="chip" style="background: #6b6b70"></div><div class="name">dim</div><div class="hex">#6b6b70</div><div class="use">footer、注释、URL · 由 palette 8 提亮</div></div>
+			<div class="sw"><div class="chip" style="background: #333333"></div><div class="name">line</div><div class="hex">#333333</div><div class="use">分割线、边框 · 等于终端 selection</div></div>
+			<div class="sw"><div class="chip" style="background: #1e1e1e"></div><div class="name">raised</div><div class="hex">#1e1e1e</div><div class="use">用户消息底 · 比画布亮一档</div></div>
+			<div class="sw"><div class="chip" style="background: #a9c1cf"></div><div class="name">blue</div><div class="hex">#a9c1cf</div><div class="use">链接、扩展消息 · palette 12</div></div>
+			<div class="sw"><div class="chip" style="background: #a8b380"></div><div class="name">green</div><div class="hex">#a8b380</div><div class="use">成功、diff +、bash 模式 · palette 2</div></div>
+			<div class="sw"><div class="chip" style="background: #c6787a"></div><div class="name">red</div><div class="hex">#c6787a</div><div class="use">错误、diff − · palette 1</div></div>
+			<div class="sw"><div class="chip" style="background: #d8b173"></div><div class="name">amber</div><div class="hex">#d8b173</div><div class="use">警告、thinking max · 等于终端光标色</div></div>
+		</div>
+
+		<div class="callout">
+			<b>画布和字体都不归主题管。</b>pi 只画文字和局部色块——背景是 Ghostty 的 <code>background = #141414</code>，字体是 Ghostty 的 <code>font-family = Maple Mono NF</code>。所以这套主题是照着你的终端校准的：块背景 <code>#1a1a1a / #1e1e1e</code> 只比画布亮一到两档，线用你的 selection 色 <code>#333333</code>，琥珀取自你的光标色 <code>#d8b173</code>。换终端主题的话，这套要重新校。
+		</div>
+	</section>
+
+	<hr />
+
+	<section>
+		<div class="section-head">
+			<p class="eyebrow">07 · 落地</p>
+			<h2>已经落地的东西</h2>
+		</div>
+		<div class="rows">
+			<div class="row">
+				<div class="what">themes/ <span class="badge ext">已装</span></div>
+				<div class="detail">深色 + 浅色两个文件，软链进 <code>~/.pi/agent/themes/</code>。改文件 pi 会热重载。</div>
+			</div>
+			<div class="row">
+				<div class="what">grok-tui <span class="badge ext">已装</span></div>
+				<div class="detail">八个文件的扩展，只用 <code>setHeader</code> / <code>setFooter</code> / <code>setEditorComponent</code>。spinner 没碰，保留 pi 默认。配置在 <code>~/.pi/agent/grok-tui.json</code>，改完 <code>/grok-tui reload</code>。</div>
+			</div>
+			<div class="row">
+				<div class="what">pi-open-tui <span class="badge fixed">已停用</span></div>
+				<div class="detail"><code>open-tui.json</code> 的 <code>enabled</code> 翻成 <code>false</code>，没卸载。<code>./install.sh --uninstall</code> 全部还原。</div>
+			</div>
+			<div class="row">
+				<div class="what">geek-header.ts <span class="badge fixed">已移走</span></div>
+				<div class="detail">装完第一次跑，header 还是旧的——因为 <code>~/.pi/agent/extensions/</code> 里躺着这个扩展，它也调 <code>setHeader</code>，而自动发现目录的加载顺序排在 settings.json 之后，于是覆盖了本扩展。已移到 <code>extensions-backup/</code>。<code>install.sh</code> 现在会扫描并警告这类冲突。</div>
+			</div>
+		</div>
+	</section>
+
+</div>
+
+<script>
+	// pi's default braille spinner, running at its real cadence
+	(function () {
+		var frames = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
+		var targets = document.querySelectorAll("[data-spin]");
+		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+		var i = 0;
+		setInterval(function () {
+			i = (i + 1) % frames.length;
+			for (var n = 0; n < targets.length; n++) targets[n].textContent = frames[i];
+		}, 90);
+	})();
+
+	// Startup logo animation. Frame data ported verbatim from pi-open-tui's
+	// header.ts — the 22 frames it ships but never plays. Colors collapsed to
+	// grayscale: sliding pieces dim, settled parts mid, final lock-up white.
+	(function () {
+		var CELL = "███";
+		var FRAMES = [];
+		for (var ay = 0; ay < 4; ay++) FRAMES.push({ phase: 0, active: "left", ax: 2, ay: ay });
+		for (var ay = 0; ay < 3; ay++) FRAMES.push({ phase: 1, active: "top", ax: 2, ay: ay });
+		for (var ay = 0; ay < 5; ay++) FRAMES.push({ phase: 2, active: "right", ax: 5, ay: ay });
+		FRAMES.push({ phase: 3, active: "none", flash: false });
+		FRAMES.push({ phase: 3, active: "none", flash: true });
+		FRAMES.push({ phase: 3, active: "none", flash: false });
+		FRAMES.push({ phase: 3, active: "none", flash: true });
+		FRAMES.push({ phase: 4, active: "none" });
+		FRAMES.push({ phase: 5, active: "none" });
+		FRAMES.push({ phase: 5, active: "none", white: true });
+		FRAMES.push({ phase: 5, active: "none" });
+		FRAMES.push({ phase: 5, active: "none", white: true });
+		FRAMES.push({ phase: 6, active: "none" });
+
+		function hasCell(y, x, cells) { return cells.split(" ").indexOf(y + "," + x) !== -1; }
+		function hasPiece(y, x, py, px, cells) {
+			return cells.split(" ").some(function (item) {
+				var p = item.split(",").map(Number);
+				return y === py + p[0] && x === px + p[1];
+			});
+		}
+
+		function cellClass(frame, y, x) {
+			if (frame.white) return hasCell(y, x, "3,2 3,3 3,4 4,2 4,4 5,2 5,3 5,5 6,2 6,5") ? "cell-done" : null;
+			if (frame.flash && y === 6 && x >= 1 && x <= 6) return "cell-flash";
+			if (frame.active === "left" && hasPiece(y, x, frame.ay, frame.ax, "0,0 1,0 1,1 2,0")) return "cell-idle";
+			if (frame.active === "top" && hasPiece(y, x, frame.ay, frame.ax, "0,0 0,1 0,2 1,2")) return "cell-idle";
+			if (frame.active === "right" && hasPiece(y, x, frame.ay, frame.ax, "0,0 1,0 2,0 2,1")) return "cell-idle";
+			if (frame.phase === 6) return hasCell(y, x, "3,2 3,3 3,4 4,4 4,2 5,2 5,3 5,5 6,2 6,5") ? "cell-done" : null;
+			if (frame.phase === 4) return hasCell(y, x, "2,2 2,3 2,4 3,4 3,2 4,2 4,3 5,2 4,5 5,5") ? "cell-set" : null;
+			if (frame.phase >= 5) return hasCell(y, x, "3,2 3,3 3,4 4,4 4,2 5,2 5,3 6,2 5,5 6,5") ? "cell-set" : null;
+			if (frame.phase <= 3 && hasCell(y, x, "6,1 6,2 6,3 6,4")) return "cell-set";
+			if (frame.phase >= 2 && hasCell(y, x, "2,2 2,3 2,4 3,4")) return "cell-set";
+			if (frame.phase >= 1 && hasCell(y, x, "3,2 4,2 4,3 5,2")) return "cell-set";
+			if (frame.phase >= 3 && hasCell(y, x, "4,5 5,5 6,5 6,6")) return "cell-set";
+			return null;
+		}
+
+		function renderFrame(index) {
+			var frame = FRAMES[index];
+			var grid = [];
+			// Fixed crop, unlike the original: open-tui recomputes min/max per
+			// frame, which makes the logo jitter sideways while pieces slide in.
+			// Fixed viewport on both axes — cropping per frame, or trimming blank
+			// rows at the end, makes the mark jump. Rows 2–6 cover the whole
+			// choreography; row 1 is clipped so the first piece enters from
+			// beyond the edge.
+			var minX = 1, maxX = 6;
+			for (var y = 2; y <= 6; y++) {
+				var row = [];
+				for (var x = 1; x <= 8; x++) row.push(cellClass(frame, y, x));
+				grid.push(row);
+			}
+			return grid.map(function (row) {
+				var line = "";
+				for (var x = minX; x <= maxX; x++) {
+					var cls = row[x - 1];
+					line += cls ? '<span class="' + cls + '">' + CELL + "</span>" : "&nbsp;&nbsp;&nbsp;";
+				}
+				return line;
+			}).join("<br />");
+		}
+
+		var stage = document.getElementById("anim");
+		var counter = document.getElementById("frame-no");
+		var button = document.getElementById("replay");
+		if (!stage) return;
+		var timer = null;
+
+		function play() {
+			if (timer) clearInterval(timer);
+			var i = 0;
+			var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+			if (reduce) {
+				stage.innerHTML = renderFrame(FRAMES.length - 1);
+				counter.textContent = "frame " + FRAMES.length + " / " + FRAMES.length;
+				return;
+			}
+			timer = setInterval(function () {
+				stage.innerHTML = renderFrame(i);
+				counter.textContent = "frame " + (i + 1) + " / " + FRAMES.length;
+				i++;
+				if (i >= FRAMES.length) { clearInterval(timer); timer = null; }
+			}, 70);
+		}
+
+		button.addEventListener("click", play);
+		play();
+	})();
+</script>
+
+</body>
+</html>

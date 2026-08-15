@@ -1,0 +1,97 @@
+{
+	"$schema": "https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+	"name": "grok",
+	"vars": {
+		"ink": "#f5f5f5",
+		"text": "#e1e1e1",
+		"textSoft": "#c4c4c4",
+		"muted": "#a8a8a8",
+		"dim": "#6b6b70",
+		"dimmer": "#4a4a4e",
+
+		"line": "#333333",
+		"lineMuted": "#262626",
+
+		"sel": "#333333",
+		"raised": "#1e1e1e",
+		"sunken": "#1a1a1a",
+		"surfaceOk": "#1a1f19",
+		"surfaceErr": "#201819",
+
+		"red": "#c6787a",
+		"green": "#a8b380",
+		"amber": "#d8b173",
+		"blue": "#8fa7b6",
+		"cyan": "#8bb8ae",
+		"blueBright": "#a9c1cf",
+		"purpleBright": "#cbaac3"
+	},
+	"colors": {
+		"accent": "ink",
+		"border": "line",
+		"borderAccent": "ink",
+		"borderMuted": "lineMuted",
+		"success": "green",
+		"error": "red",
+		"warning": "amber",
+		"muted": "muted",
+		"dim": "dim",
+		"text": "text",
+		"thinkingText": "dim",
+
+		"selectedBg": "sel",
+		"scrollbarThumb": "line",
+		"searchMatchBg": "sel",
+		"searchMatchText": "ink",
+		"userMessageBg": "raised",
+		"userMessageText": "text",
+		"customMessageBg": "sunken",
+		"customMessageText": "muted",
+		"customMessageLabel": "blueBright",
+		"toolPendingBg": "sunken",
+		"toolSuccessBg": "surfaceOk",
+		"toolErrorBg": "surfaceErr",
+		"toolTitle": "text",
+		"toolOutput": "muted",
+
+		"mdHeading": "ink",
+		"mdLink": "blueBright",
+		"mdLinkUrl": "dim",
+		"mdCode": "cyan",
+		"mdCodeBlock": "text",
+		"mdCodeBlockBorder": "line",
+		"mdQuote": "muted",
+		"mdQuoteBorder": "line",
+		"mdHr": "line",
+		"mdListBullet": "dim",
+
+		"toolDiffAdded": "green",
+		"toolDiffRemoved": "red",
+		"toolDiffContext": "dim",
+
+		"syntaxComment": "dim",
+		"syntaxKeyword": "blue",
+		"syntaxFunction": "text",
+		"syntaxVariable": "textSoft",
+		"syntaxString": "green",
+		"syntaxNumber": "purpleBright",
+		"syntaxType": "cyan",
+		"syntaxOperator": "muted",
+		"syntaxPunctuation": "dim",
+
+		"thinkingOff": "lineMuted",
+		"thinkingMinimal": "line",
+		"thinkingLow": "dimmer",
+		"thinkingMedium": "dim",
+		"thinkingHigh": "muted",
+		"thinkingXhigh": "ink",
+		"thinkingMax": "amber",
+
+		"bashMode": "green"
+	},
+	"export": {
+		"pageBg": "#141414",
+		"cardBg": "#1e1e1e",
+		"infoBg": "#262626"
+	}
+}

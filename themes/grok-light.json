@@ -1,0 +1,98 @@
+{
+	"$schema": "https://raw.githubusercontent.com/earendil-works/pi/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+	"name": "grok-light",
+	"vars": {
+		"ink": "#0f1419",
+		"textSecondary": "#536471",
+		"textTertiary": "#6b7b88",
+		"textDim": "#8b98a5",
+
+		"line": "#cfd9de",
+		"lineMuted": "#e7ecef",
+
+		"surfaceSel": "#eff3f4",
+		"surfaceRaised": "#f7f9f9",
+		"surfaceSunken": "#f2f5f6",
+		"surfaceOk": "#edf7f2",
+		"surfaceErr": "#fdf0f1",
+
+		"blue": "#1d78c0",
+		"green": "#00815a",
+		"red": "#d1242f",
+		"amber": "#9a6700",
+
+		"codeBlue": "#1a5f8a",
+		"codeSky": "#116b8f",
+		"codeMint": "#1a7f5a",
+		"codeIris": "#6b4fa8",
+		"codeSlate": "#3c4a54"
+	},
+	"colors": {
+		"accent": "ink",
+		"border": "line",
+		"borderAccent": "ink",
+		"borderMuted": "lineMuted",
+		"success": "green",
+		"error": "red",
+		"warning": "amber",
+		"muted": "textSecondary",
+		"dim": "textDim",
+		"text": "ink",
+		"thinkingText": "textSecondary",
+
+		"selectedBg": "surfaceSel",
+		"scrollbarThumb": "line",
+		"searchMatchBg": "surfaceSel",
+		"searchMatchText": "ink",
+		"userMessageBg": "surfaceRaised",
+		"userMessageText": "ink",
+		"customMessageBg": "surfaceSunken",
+		"customMessageText": "textSecondary",
+		"customMessageLabel": "blue",
+		"toolPendingBg": "surfaceSunken",
+		"toolSuccessBg": "surfaceOk",
+		"toolErrorBg": "surfaceErr",
+		"toolTitle": "ink",
+		"toolOutput": "textSecondary",
+
+		"mdHeading": "ink",
+		"mdLink": "blue",
+		"mdLinkUrl": "textDim",
+		"mdCode": "codeSky",
+		"mdCodeBlock": "ink",
+		"mdCodeBlockBorder": "line",
+		"mdQuote": "textSecondary",
+		"mdQuoteBorder": "line",
+		"mdHr": "line",
+		"mdListBullet": "textDim",
+
+		"toolDiffAdded": "green",
+		"toolDiffRemoved": "red",
+		"toolDiffContext": "textSecondary",
+
+		"syntaxComment": "textDim",
+		"syntaxKeyword": "codeBlue",
+		"syntaxFunction": "ink",
+		"syntaxVariable": "codeSlate",
+		"syntaxString": "codeMint",
+		"syntaxNumber": "codeIris",
+		"syntaxType": "codeSky",
+		"syntaxOperator": "textSecondary",
+		"syntaxPunctuation": "textTertiary",
+
+		"thinkingOff": "line",
+		"thinkingMinimal": "#b3c0c8",
+		"thinkingLow": "#8b98a5",
+		"thinkingMedium": "#5b6b78",
+		"thinkingHigh": "#2b3740",
+		"thinkingXhigh": "ink",
+		"thinkingMax": "blue",
+
+		"bashMode": "green"
+	},
+	"export": {
+		"pageBg": "#ffffff",
+		"cardBg": "#f7f9f9",
+		"infoBg": "#eff3f4"
+	}
+}
