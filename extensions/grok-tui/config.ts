@@ -12,6 +12,19 @@ export interface GrokTuiConfig {
 	enabled: boolean;
 	/** Wipe the screen and scrollback once, before pi paints its first frame. */
 	clearOnStart: boolean;
+	/**
+	 * Say so on the working line while the model reasons: `Working with thinking`
+	 * during a reasoning burst, plain `Working` the rest of the time.
+	 */
+	thinkingInWorking: boolean;
+	/**
+	 * Whether thinking blocks start hidden. Hiding is display-only — the blocks
+	 * stay in the session and in the model's context — and leaves no row behind,
+	 * unlike pi's own `hideThinkingBlock`, which this needs turned off.
+	 */
+	thinkingBlocks: "hidden" | "visible";
+	/** Key that flips thinking blocks between hidden and visible. "" disables it. */
+	thinkingToggleKey: string;
 	/** Header layout: full = framed two columns, plain = no frame, logo = logo only. */
 	header: HeaderStyle;
 	/** Play the startup logo animation once per session. */
@@ -34,10 +47,9 @@ export interface GrokTuiConfig {
 		thinking: boolean;
 		cost: boolean;
 		/**
-		 * Left indent, in cells. Box-drawing glyphs are painted in the middle of
-		 * their cell while text starts at the cell's left edge, so a footer on
-		 * column 0 reads as half a cell left of the frame it sits under. One cell
-		 * of indent puts the text back under the border line.
+		 * Left indent, in cells. Box-drawing glyphs sit in the middle of their cell
+		 * while text starts at its left edge, so a footer on column 0 reads as half
+		 * a cell left of the frame above it. One cell puts it back under the border.
 		 */
 		indent: number;
 	};
@@ -46,6 +58,10 @@ export interface GrokTuiConfig {
 export const DEFAULT_CONFIG: GrokTuiConfig = {
 	enabled: true,
 	clearOnStart: true,
+	thinkingInWorking: true,
+	thinkingBlocks: "hidden",
+	// ctrl+t belongs to pi's own toggle and is reserved against extensions.
+	thinkingToggleKey: "alt+t",
 	header: "full",
 	headerAnimation: true,
 	// Phrase inherited from pi-open-tui's header. Set to "" to drop it.

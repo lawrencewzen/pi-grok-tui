@@ -31,7 +31,8 @@
 | 编辑器光标 | 扩展 | 交给终端自己画（尊重你的 `cursor-style`），剥掉 pi 的反显方块 |
 | 补全面板 | 扩展 | 向上展开，输入框留在原地；面板本身仍由 pi 渲染 |
 | spinner | 扩展 | braille 转圈，换成重心恒定的一组帧（见下） |
-| working 行 | 扩展 | `Working 12s · 3.4k tok`，秒数和输出 token 每 250ms 刷新 |
+| working 行 | 扩展 | `Working 12s · 3.4k tok`，秒数和输出 token 每 250ms 刷新；推理时变 `Working with thinking`，pi 自己那句 `Thinking...` 同时抹掉 |
+| 思考块 | 扩展 | 默认整段不渲染（数据仍在 session 和上下文里），`alt+t` 随时调出来 |
 | 工具输出 | 扩展 | 启动时折叠，`Ctrl+O`（pi 内置）随时展开 |
 | 启动清单 | pi 内核 | 替换不了，用 `quietStartup` 静音；header 右栏改从 `getCommands()` 取真实命令补上 |
 | 用户消息、工具框、语法高亮 | 主题 | 只能改颜色，结构是 pi 内核画的 |
@@ -65,6 +66,9 @@
 {
   "enabled": true,
   "clearOnStart": true,
+  "thinkingInWorking": true,
+  "thinkingBlocks": "hidden",
+  "thinkingToggleKey": "alt+t",
   "header": "full",
   "headerAnimation": true,
   "tagline": "Let's build something great",
@@ -82,6 +86,9 @@
 ```
 
 - `clearOnStart` — 启动时清屏：屏幕、回滚缓冲、连你敲的那行 `pi` 一起清掉，header 从第一行开始画。只在进程内清一次（`/new`、`/grok-tui reload` 不会再清，否则会打乱 pi 的差分渲染），`enabled: false` 时依然生效
+- `thinkingInWorking` — 思考状态并进 working 行：模型在推理时是 `Working with thinking 26s · ~2.7k tok`，不推理时就是 `Working …`。同时把 pi 那句 `Thinking...` 抹成空串，省得两处同时喊
+- `thinkingBlocks` — 思考块的初始状态，`hidden` 或 `visible`。隐藏是**只改渲染**：思考内容照常留在 session 和模型上下文里，随时能调出来看
+- `thinkingToggleKey` — 切换思考显隐的键，默认 `alt+t`。`ctrl+t` 是 pi 自己的开关键、被它保留了，扩展抢不过来；设成 `""` 就只留 `/grok-tui thinking`
 - `header` — `full` 带框两栏 / `plain` 去框 / `logo` 只留标记
 - `headerAnimation` — 启动时播一次组装动画（22 帧 × 70ms）
 - `tagline` — logo 下那句话，设成 `""` 就没了
@@ -97,7 +104,15 @@
 - `footer.gitBranch` / `footer.thinking` / `footer.cost` — 打开会多出 `| main +2`、`| high`、`| 0.31` 这几段
 - `footer.indent` — footer 左缩进几格，默认 `1`。框线字符是画在字格正中的，文字却从字格左边起笔，所以 footer 落在第 0 列时会显得比上面的框线左出半格；缩进一格把它压回框线上。想要严格的网格对齐就设 `0`
 
-命令：`/grok-tui`（看当前解析结果）、`/grok-tui on|off`、`/grok-tui reload`。
+命令：`/grok-tui`（看当前解析结果）、`/grok-tui on|off`、`/grok-tui reload`、`/grok-tui thinking [show|hide]`（不带参数就是切换，等价于 `alt+t`）。
+
+### 思考块为什么要交给扩展
+
+pi 自己隐藏思考块（`hideThinkingBlock: true`）是把整段推理换成一句 `Thinking...`，那行**是 pi 画的、扩展只能改文字不能删行**——抹成空串也还是一行空白，加上后面的间隔行，一段思考要占两行。
+
+改走 Markdown 那条路（`hideThinkingBlock: false`）就没这问题：扩展用 markdown transformer 把思考内容换成空串，pi 渲染 0 行，只剩它给思考块留的一个间隔行。`install.sh` 会帮你把 `hideThinkingBlock` 设成 `false`（这本来就是 pi 的默认值），显隐改由 `alt+t` 控制。
+
+数据一点没动：思考块仍原样存在消息里，session 文件和回传给模型的上下文都完整，`alt+t` 随时能把历史里的推理重新显示出来（切换时扩展会重新应用当前主题，强制整棵组件树重绘）。
 
 ## 主题
 
