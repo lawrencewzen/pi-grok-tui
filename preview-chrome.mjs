@@ -60,7 +60,7 @@ for (const frame of [0, 6, 12, FRAME_COUNT - 1]) {
 }
 animated.dispose();
 
-rule("footer · default (plain text, three segments)");
+rule("footer · default (plain text, four segments)");
 const footer = new GrokFooter(pi, ctx, tui, theme, footerData, DEFAULT_CONFIG);
 show(footer.render(WIDTH));
 footer.dispose();
@@ -69,7 +69,7 @@ rule("footer · all segments on, icons forced");
 const full = new GrokFooter(pi, ctx, tui, theme, footerData, {
 	...DEFAULT_CONFIG,
 	icons: "nerd",
-	footer: { gitBranch: true, thinking: true, cost: true },
+	footer: { ...DEFAULT_CONFIG.footer, gitBranch: true, thinking: true, cost: true },
 });
 show(full.render(WIDTH));
 full.dispose();

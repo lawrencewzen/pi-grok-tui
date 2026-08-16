@@ -20,7 +20,7 @@ export function formatModel(model: { name?: string; id?: string } | null | undef
 }
 
 export function formatThinking(level: string | undefined): string {
-	return level && level !== "off" ? level : "off";
+	return level || "off";
 }
 
 export function padRight(text: string, width: number): string {

@@ -47,7 +47,7 @@ elif action == "remove" and entry in extensions:
     extensions.remove(entry)
     print(f"unregistered {entry}")
 else:
-    print(f"unchanged   settings.json")
+    print("unchanged   settings.json")
 data["extensions"] = extensions
 path.parent.mkdir(parents=True, exist_ok=True)
 path.write_text(json.dumps(data, indent=2) + "\n")
@@ -77,32 +77,6 @@ else:
 path.parent.mkdir(parents=True, exist_ok=True)
 path.write_text(json.dumps(data, indent=2) + "\n")
 QUIET
-}
-
-# pi's own hiding swaps thinking for a `Thinking...` label and still spends a
-# row on it. Handing thinking to the extension (hideThinkingBlock=false) lets it
-# render nothing at all, toggled with alt+t. false is also pi's default, so
-# uninstall just drops the key.
-# $1 = on | off
-set_thinking() {
-	python3 - "$settings" "$1" <<'THINK'
-import json, sys, pathlib
-path, action = pathlib.Path(sys.argv[1]), sys.argv[2]
-data = json.loads(path.read_text()) if path.exists() else {}
-if action == "on":
-    if data.get("hideThinkingBlock") is True:
-        data["hideThinkingBlock"] = False
-        print("set         hideThinkingBlock=false  (思考显隐交给扩展，alt+t 切换)")
-    else:
-        print("unchanged   hideThinkingBlock")
-elif "hideThinkingBlock" in data:
-    del data["hideThinkingBlock"]
-    print("removed     hideThinkingBlock")
-else:
-    print("unchanged   hideThinkingBlock")
-path.parent.mkdir(parents=True, exist_ok=True)
-path.write_text(json.dumps(data, indent=2) + "\n")
-THINK
 }
 
 # $1 = true | false
@@ -144,7 +118,6 @@ case "$mode" in
 	unlink_themes
 	settings_extension remove
 	set_quiet_startup off
-	set_thinking off
 	set_open_tui true
 	echo
 	echo "回到原状。重启 pi 生效。"
@@ -158,13 +131,11 @@ case "$mode" in
 	link_themes
 	settings_extension add
 	set_quiet_startup on
-	set_thinking on
 	set_open_tui false
 	check_conflicts
 	echo
 	echo "装好了。重启 pi 生效。"
 	echo "  /settings      选 grok 主题"
-	echo "  alt+t          显示/隐藏思考块"
 	echo "  /grok-tui      查看当前解析到的配置"
 	echo "  ./install.sh --uninstall   全部还原"
 	;;

@@ -80,12 +80,12 @@
 		"syntaxOperator": "textSecondary",
 		"syntaxPunctuation": "textTertiary",
 
-		"thinkingOff": "line",
-		"thinkingMinimal": "#b3c0c8",
-		"thinkingLow": "#8b98a5",
-		"thinkingMedium": "#5b6b78",
-		"thinkingHigh": "#2b3740",
-		"thinkingXhigh": "ink",
+		"thinkingOff": "lineMuted",
+		"thinkingMinimal": "line",
+		"thinkingLow": "#b3c0c8",
+		"thinkingMedium": "#8b98a5",
+		"thinkingHigh": "#5b6b78",
+		"thinkingXhigh": "#2b3740",
 		"thinkingMax": "blue",
 
 		"bashMode": "green"

@@ -1,12 +1,10 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import type { KeyId } from "@earendil-works/pi-tui";
 import { type GrokTuiConfig, loadConfig, saveConfig } from "./config.ts";
 import { installEditor } from "./editor.ts";
 import { installFooter } from "./footer.ts";
 import { installHeader } from "./header.ts";
 import { detectNerdFont } from "./icons.ts";
 import { installSpinner } from "./spinner.ts";
-import { installThinking } from "./thinking.ts";
 import { installWorkingStats } from "./working.ts";
 
 type Teardown = () => void;
@@ -54,23 +52,9 @@ export default function (pi: ExtensionAPI) {
 		teardowns = [];
 	};
 
-	// Event handlers can't be unregistered, so these read config lazily and
-	// no-op when the chrome is off.
+	// Event handlers can't be unregistered, so this reads config lazily and
+	// no-ops when the chrome is off.
 	installWorkingStats(pi, () => config);
-	const thinking = installThinking(pi, () => config);
-
-	const reportThinking = (ctx: ExtensionContext) =>
-		ctx.ui.notify(`Thinking blocks: ${thinking.isVisible() ? "visible" : "hidden"}`, "info");
-
-	if (config.thinkingToggleKey) {
-		pi.registerShortcut(config.thinkingToggleKey as KeyId, {
-			description: "Show or hide thinking blocks",
-			handler: (ctx) => {
-				thinking.toggle(ctx);
-				reportThinking(ctx);
-			},
-		});
-	}
 
 	pi.on("session_start", (_event, ctx) => {
 		// Independent of `enabled`: a clean screen isn't chrome.
@@ -89,7 +73,7 @@ export default function (pi: ExtensionAPI) {
 	pi.registerCommand("grok-tui", {
 		description: "Toggle the Grok TUI chrome, or show what it resolved",
 		handler: async (args, ctx) => {
-			const [arg, value] = (args ?? "").trim().split(/\s+/);
+			const arg = (args ?? "").trim();
 
 			if (arg === "on" || arg === "off") {
 				config = { ...config, enabled: arg === "on" };
@@ -97,14 +81,6 @@ export default function (pi: ExtensionAPI) {
 				uninstall();
 				install(ctx);
 				ctx.ui.notify(`grok-tui ${arg}`, "info");
-				return;
-			}
-
-			if (arg === "thinking") {
-				if (value === "show") thinking.set(ctx, true);
-				else if (value === "hide") thinking.set(ctx, false);
-				else thinking.toggle(ctx);
-				reportThinking(ctx);
 				return;
 			}
 
@@ -123,7 +99,6 @@ export default function (pi: ExtensionAPI) {
 					`header ${config.header}${config.headerAnimation ? " + animation" : ""}`,
 					`editor ${config.editorFrame}`,
 					`clearOnStart ${config.clearOnStart}`,
-					`thinking ${thinking.isVisible() ? "visible" : "hidden"}${config.thinkingToggleKey ? ` · ${config.thinkingToggleKey}` : ""}`,
 					`icons ${icons}`,
 					"edit ~/.pi/agent/grok-tui.json, then /grok-tui reload",
 				].join("  ·  "),

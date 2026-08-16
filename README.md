@@ -17,7 +17,7 @@
 │      ~/Projects/pi-tui-theme            /help for all                      │
 └────────────────────────────────────────────────────────────────────────────┘
 
-~/Projects/pi-tui-theme | DeepSeek Chat | 86% left
+~/Projects/pi-tui-theme | DeepSeek Chat | high | 86% left
 ```
 
 ## 装什么、不装什么
@@ -26,13 +26,12 @@
 |---|---|---|
 | 启动清屏 | 扩展 | 在 pi 画第一帧之前清掉屏幕、回滚缓冲和你敲的那行 `pi` |
 | header | 扩展 | 直角 hairline 框、白色方块 π、右栏命令提示；**启动动画真的会播** |
-| footer | 扩展 | 单行三段 `cwd \| 模型 \| 剩余上下文`，`\|` 分隔，默认纯文字（Nerd Font 图标可选） |
+| footer | 扩展 | 单行四段 `cwd \| 模型 \| 思考强度 \| 剩余上下文`，`\|` 分隔，默认纯文字（Nerd Font 图标可选） |
 | 编辑器 | 扩展 | 方角闭合细框（pi 默认只有上下两条横线），边框色仍随 thinking 等级和 bash 模式变化 |
 | 编辑器光标 | 扩展 | 交给终端自己画（尊重你的 `cursor-style`），剥掉 pi 的反显方块 |
 | 补全面板 | 扩展 | 向上展开，输入框留在原地；面板本身仍由 pi 渲染 |
 | spinner | 扩展 | braille 转圈，换成重心恒定的一组帧（见下） |
-| working 行 | 扩展 | `Working 12s · 3.4k tok`，秒数和输出 token 每 250ms 刷新；推理时变 `Working with thinking`，pi 自己那句 `Thinking...` 同时抹掉 |
-| 思考块 | 扩展 | 默认整段不渲染（数据仍在 session 和上下文里），`alt+t` 随时调出来 |
+| working 行 | 扩展 | `Working 12s · 3.4k tok`，秒数和输出 token 每 250ms 刷新；推理时变 `Working with thinking` |
 | 工具输出 | 扩展 | 启动时折叠，`Ctrl+O`（pi 内置）随时展开 |
 | 启动清单 | pi 内核 | 替换不了，用 `quietStartup` 静音；header 右栏改从 `getCommands()` 取真实命令补上 |
 | 用户消息、工具框、语法高亮 | 主题 | 只能改颜色，结构是 pi 内核画的 |
@@ -56,6 +55,8 @@
 
 **注意加载顺序**：`~/.pi/agent/extensions/` 是自动发现目录，加载顺序排在 `settings.json` 里的扩展之后。那里面任何调 `setHeader` / `setFooter` / `setEditorComponent` 的文件都会覆盖本扩展。`install.sh` 会扫描并列出这类文件。
 
+**想让输入框钉在屏幕底部**：那是 pi 的布局模式，扩展够不到——在 `settings.json` 里设 `"tuiMode": "fullscreen"`，pi 走终端备用屏，输入框固定在最下面，内容区由 pi 自己滚。代价是终端原生的滚轮和回滚缓冲交给了 pi（它自带滚动、搜索、选中复制），退出后屏幕恢复原样，打不打印 transcript 由 `fullscreenExitOutput` 决定。这个模式下 `clearOnStart` 就没意义了——备用屏本来就是干净的。
+
 **与 `pi-working-phrase` 冲突**：`workingStats` 每 250ms 重写 working 行，会盖掉那个包的随机工作词。想留着它就设 `workingStats: false`，想要统计就二选一。
 
 ## 配置
@@ -67,8 +68,6 @@
   "enabled": true,
   "clearOnStart": true,
   "thinkingInWorking": true,
-  "thinkingBlocks": "hidden",
-  "thinkingToggleKey": "alt+t",
   "header": "full",
   "headerAnimation": true,
   "tagline": "Let's build something great",
@@ -81,14 +80,12 @@
   "workingLabel": "Working",
   "collapseTools": true,
   "icons": "off",
-  "footer": { "gitBranch": false, "thinking": false, "cost": false, "indent": 1 }
+  "footer": { "gitBranch": false, "thinking": true, "cost": false, "indent": 1 }
 }
 ```
 
 - `clearOnStart` — 启动时清屏：屏幕、回滚缓冲、连你敲的那行 `pi` 一起清掉，header 从第一行开始画。只在进程内清一次（`/new`、`/grok-tui reload` 不会再清，否则会打乱 pi 的差分渲染），`enabled: false` 时依然生效
-- `thinkingInWorking` — 思考状态并进 working 行：模型在推理时是 `Working with thinking 26s · ~2.7k tok`，不推理时就是 `Working …`。同时把 pi 那句 `Thinking...` 抹成空串，省得两处同时喊
-- `thinkingBlocks` — 思考块的初始状态，`hidden` 或 `visible`。隐藏是**只改渲染**：思考内容照常留在 session 和模型上下文里，随时能调出来看
-- `thinkingToggleKey` — 切换思考显隐的键，默认 `alt+t`。`ctrl+t` 是 pi 自己的开关键、被它保留了，扩展抢不过来；设成 `""` 就只留 `/grok-tui thinking`
+- `thinkingInWorking` — 思考状态并进 working 行：模型在推理时是 `Working with thinking 26s · ~2.7k tok`，不推理时就是 `Working …`。思考块本身怎么显示仍归 pi 管（`hideThinkingBlock`）
 - `header` — `full` 带框两栏 / `plain` 去框 / `logo` 只留标记
 - `headerAnimation` — 启动时播一次组装动画（22 帧 × 70ms）
 - `tagline` — logo 下那句话，设成 `""` 就没了
@@ -101,18 +98,11 @@
 - `workingLabel` — 那行前面的词
 - `collapseTools` — 启动时折叠工具输出。这只设初始状态，`Ctrl+O` 照常切换
 - `icons` — `off` 纯文字 / `nerd` 强制开 Nerd Font 图标 / `auto` 按终端类型猜。`PI_NERD_FONT=0` 可强制关
-- `footer.gitBranch` / `footer.thinking` / `footer.cost` — 打开会多出 `| main +2`、`| high`、`| 0.31` 这几段
+- `footer.thinking` — 显示当前思考强度（`off` / `low` / `high` …），默认开。和输入框边框是同一个信息，边框用颜色说，footer 用字说
+- `footer.gitBranch` / `footer.cost` — 打开会多出 `| main`、`| 0.31` 这两段
 - `footer.indent` — footer 左缩进几格，默认 `1`。框线字符是画在字格正中的，文字却从字格左边起笔，所以 footer 落在第 0 列时会显得比上面的框线左出半格；缩进一格把它压回框线上。想要严格的网格对齐就设 `0`
 
-命令：`/grok-tui`（看当前解析结果）、`/grok-tui on|off`、`/grok-tui reload`、`/grok-tui thinking [show|hide]`（不带参数就是切换，等价于 `alt+t`）、`/exit`（pi 只认 `/quit`，这里补一个同义词，走的是同一条退出路径）。
-
-### 思考块为什么要交给扩展
-
-pi 自己隐藏思考块（`hideThinkingBlock: true`）是把整段推理换成一句 `Thinking...`，那行**是 pi 画的、扩展只能改文字不能删行**——抹成空串也还是一行空白，加上后面的间隔行，一段思考要占两行。
-
-改走 Markdown 那条路（`hideThinkingBlock: false`）就没这问题：扩展用 markdown transformer 把思考内容换成空串，pi 渲染 0 行，只剩它给思考块留的一个间隔行。`install.sh` 会帮你把 `hideThinkingBlock` 设成 `false`（这本来就是 pi 的默认值），显隐改由 `alt+t` 控制。
-
-数据一点没动：思考块仍原样存在消息里，session 文件和回传给模型的上下文都完整，`alt+t` 随时能把历史里的推理重新显示出来（切换时扩展会重新应用当前主题，强制整棵组件树重绘）。
+命令：`/grok-tui`（看当前解析结果）、`/grok-tui on|off`、`/grok-tui reload`、`/exit`（pi 只认 `/quit`，这里补一个同义词，走的是同一条退出路径）。
 
 ## 主题
 

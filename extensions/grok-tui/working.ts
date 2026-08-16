@@ -29,6 +29,10 @@ function formatTokens(n: number): string {
  * multi-tool turn keeps counting up instead of resetting per message.
  */
 export function installWorkingStats(pi: ExtensionAPI, getConfig: () => GrokTuiConfig): void {
+	// Whether this run took the working line over. Not the same as holding a
+	// timer: with `workingStats` off the label only changes when reasoning
+	// starts or stops, so there is nothing to tick.
+	let active = false;
 	let timer: ReturnType<typeof setInterval> | undefined;
 	let startedAt = 0;
 	let settled = 0;
@@ -39,8 +43,9 @@ export function installWorkingStats(pi: ExtensionAPI, getConfig: () => GrokTuiCo
 
 	const stop = (ctx: ExtensionContext) => {
 		// Never took the line over, so leave pi's own working message alone.
-		if (!timer) return;
-		clearInterval(timer);
+		if (!active) return;
+		active = false;
+		if (timer) clearInterval(timer);
 		timer = undefined;
 		ctx.ui.setWorkingMessage();
 	};
@@ -66,17 +71,20 @@ export function installWorkingStats(pi: ExtensionAPI, getConfig: () => GrokTuiCo
 	pi.on("agent_start", (_event, ctx) => {
 		const config = getConfig();
 		if (!config.enabled || (!config.workingStats && !config.thinkingInWorking) || ctx.mode !== "tui") return;
+		active = true;
 		startedAt = Date.now();
 		settled = 0;
 		partial = undefined;
 		thinking = false;
 		paint(ctx);
-		timer = setInterval(() => paint(ctx), TICK_MS);
-		timer.unref?.();
+		if (config.workingStats) {
+			timer = setInterval(() => paint(ctx), TICK_MS);
+			timer.unref?.();
+		}
 	});
 
 	pi.on("message_update", (event, ctx) => {
-		if (!timer) return;
+		if (!active) return;
 		const update = event.assistantMessageEvent;
 		// The terminal done/error events carry no partial; keep the last one.
 		if ("partial" in update) partial = update.partial;
@@ -93,7 +101,7 @@ export function installWorkingStats(pi: ExtensionAPI, getConfig: () => GrokTuiCo
 	});
 
 	pi.on("message_end", (event, ctx) => {
-		if (!timer) return;
+		if (!active) return;
 		settled += event.message.role === "assistant" ? (event.message.usage?.output ?? 0) : 0;
 		partial = undefined;
 		if (thinking) {

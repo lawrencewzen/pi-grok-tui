@@ -156,8 +156,6 @@ export class GrokHeader implements Component {
 			}
 			out.push(`${pad}${padRight(l, leftWidth - indent)}${r}`);
 		}
-		// A blank line under the block keeps the mark from touching the frame.
-		while (out.length && out[out.length - 1]!.trim() === "") out.pop();
 		return out;
 	}
 

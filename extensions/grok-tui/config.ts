@@ -17,14 +17,6 @@ export interface GrokTuiConfig {
 	 * during a reasoning burst, plain `Working` the rest of the time.
 	 */
 	thinkingInWorking: boolean;
-	/**
-	 * Whether thinking blocks start hidden. Hiding is display-only — the blocks
-	 * stay in the session and in the model's context — and leaves no row behind,
-	 * unlike pi's own `hideThinkingBlock`, which this needs turned off.
-	 */
-	thinkingBlocks: "hidden" | "visible";
-	/** Key that flips thinking blocks between hidden and visible. "" disables it. */
-	thinkingToggleKey: string;
 	/** Header layout: full = framed two columns, plain = no frame, logo = logo only. */
 	header: HeaderStyle;
 	/** Play the startup logo animation once per session. */
@@ -41,6 +33,12 @@ export interface GrokTuiConfig {
 	completion: CompletionPlacement;
 	/** square = square glyphs, braille = braille with a fixed center, pi = its stock spinner. */
 	spinner: SpinnerStyle;
+	/** Append elapsed time and output tokens to the working line. */
+	workingStats: boolean;
+	/** The word the working line leads with. */
+	workingLabel: string;
+	/** Start with tool output collapsed; pi's own ctrl+o still toggles it. */
+	collapseTools: boolean;
 	icons: IconMode;
 	footer: {
 		gitBranch: boolean;
@@ -59,9 +57,6 @@ export const DEFAULT_CONFIG: GrokTuiConfig = {
 	enabled: true,
 	clearOnStart: true,
 	thinkingInWorking: true,
-	thinkingBlocks: "hidden",
-	// ctrl+t belongs to pi's own toggle and is reserved against extensions.
-	thinkingToggleKey: "alt+t",
 	header: "full",
 	headerAnimation: true,
 	// Phrase inherited from pi-open-tui's header. Set to "" to drop it.
@@ -79,7 +74,7 @@ export const DEFAULT_CONFIG: GrokTuiConfig = {
 	icons: "off",
 	footer: {
 		gitBranch: false,
-		thinking: false,
+		thinking: true,
 		cost: false,
 		indent: 1,
 	},
@@ -91,17 +86,13 @@ function configPath(): string {
 }
 
 export function loadConfig(): GrokTuiConfig {
+	// A missing or malformed file is not an error: the defaults stand in. The
+	// copy matters — callers hold on to the result and DEFAULT_CONFIG is shared.
+	let parsed: Partial<GrokTuiConfig> = {};
 	try {
-		const raw = readFileSync(configPath(), "utf8");
-		const parsed = JSON.parse(raw) as Partial<GrokTuiConfig>;
-		return {
-			...DEFAULT_CONFIG,
-			...parsed,
-			footer: { ...DEFAULT_CONFIG.footer, ...(parsed.footer ?? {}) },
-		};
-	} catch {
-		return { ...DEFAULT_CONFIG, footer: { ...DEFAULT_CONFIG.footer } };
-	}
+		parsed = (JSON.parse(readFileSync(configPath(), "utf8")) as Partial<GrokTuiConfig> | null) ?? {};
+	} catch {}
+	return { ...DEFAULT_CONFIG, ...parsed, footer: { ...DEFAULT_CONFIG.footer, ...parsed.footer } };
 }
 
 export function saveConfig(config: GrokTuiConfig): void {
