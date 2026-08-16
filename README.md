@@ -24,6 +24,7 @@
 
 | 部件 | 归谁管 | 这里做了什么 |
 |---|---|---|
+| 启动清屏 | 扩展 | 在 pi 画第一帧之前清掉屏幕、回滚缓冲和你敲的那行 `pi` |
 | header | 扩展 | 直角 hairline 框、白色方块 π、右栏命令提示；**启动动画真的会播** |
 | footer | 扩展 | 单行三段 `cwd \| 模型 \| 剩余上下文`，`\|` 分隔，默认纯文字（Nerd Font 图标可选） |
 | 编辑器 | 扩展 | 方角闭合细框（pi 默认只有上下两条横线），边框色仍随 thinking 等级和 bash 模式变化 |
@@ -63,6 +64,7 @@
 ```json
 {
   "enabled": true,
+  "clearOnStart": true,
   "header": "full",
   "headerAnimation": true,
   "tagline": "Let's build something great",
@@ -75,10 +77,11 @@
   "workingLabel": "Working",
   "collapseTools": true,
   "icons": "off",
-  "footer": { "gitBranch": false, "thinking": false, "cost": false }
+  "footer": { "gitBranch": false, "thinking": false, "cost": false, "indent": 1 }
 }
 ```
 
+- `clearOnStart` — 启动时清屏：屏幕、回滚缓冲、连你敲的那行 `pi` 一起清掉，header 从第一行开始画。只在进程内清一次（`/new`、`/grok-tui reload` 不会再清，否则会打乱 pi 的差分渲染），`enabled: false` 时依然生效
 - `header` — `full` 带框两栏 / `plain` 去框 / `logo` 只留标记
 - `headerAnimation` — 启动时播一次组装动画（22 帧 × 70ms）
 - `tagline` — logo 下那句话，设成 `""` 就没了
@@ -91,7 +94,8 @@
 - `workingLabel` — 那行前面的词
 - `collapseTools` — 启动时折叠工具输出。这只设初始状态，`Ctrl+O` 照常切换
 - `icons` — `off` 纯文字 / `nerd` 强制开 Nerd Font 图标 / `auto` 按终端类型猜。`PI_NERD_FONT=0` 可强制关
-- `footer.*` — 打开会多出 `| main +2`、`| high`、`| 0.31` 这几段
+- `footer.gitBranch` / `footer.thinking` / `footer.cost` — 打开会多出 `| main +2`、`| high`、`| 0.31` 这几段
+- `footer.indent` — footer 左缩进几格，默认 `1`。框线字符是画在字格正中的，文字却从字格左边起笔，所以 footer 落在第 0 列时会显得比上面的框线左出半格；缩进一格把它压回框线上。想要严格的网格对齐就设 `0`
 
 命令：`/grok-tui`（看当前解析结果）、`/grok-tui on|off`、`/grok-tui reload`。
 

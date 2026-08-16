@@ -88,7 +88,10 @@ export class GrokFooter implements Component {
 			return seg.icon ? `${theme.fg("dim", seg.icon)} ${text}` : text;
 		});
 		const separator = theme.fg("border", " | ");
-		return [truncateToWidth(painted.join(separator), width, "…")];
+		// The indent lines the text up under the frames above it; see config.
+		const indent = " ".repeat(Math.max(0, this.config.footer.indent));
+		const room = Math.max(0, width - indent.length);
+		return [`${indent}${truncateToWidth(painted.join(separator), room, "…")}`];
 	}
 
 	invalidate(): void {}

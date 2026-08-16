@@ -10,6 +10,8 @@ export type SpinnerStyle = "square" | "braille" | "pi";
 
 export interface GrokTuiConfig {
 	enabled: boolean;
+	/** Wipe the screen and scrollback once, before pi paints its first frame. */
+	clearOnStart: boolean;
 	/** Header layout: full = framed two columns, plain = no frame, logo = logo only. */
 	header: HeaderStyle;
 	/** Play the startup logo animation once per session. */
@@ -31,11 +33,19 @@ export interface GrokTuiConfig {
 		gitBranch: boolean;
 		thinking: boolean;
 		cost: boolean;
+		/**
+		 * Left indent, in cells. Box-drawing glyphs are painted in the middle of
+		 * their cell while text starts at the cell's left edge, so a footer on
+		 * column 0 reads as half a cell left of the frame it sits under. One cell
+		 * of indent puts the text back under the border line.
+		 */
+		indent: number;
 	};
 }
 
 export const DEFAULT_CONFIG: GrokTuiConfig = {
 	enabled: true,
+	clearOnStart: true,
 	header: "full",
 	headerAnimation: true,
 	// Phrase inherited from pi-open-tui's header. Set to "" to drop it.
@@ -55,6 +65,7 @@ export const DEFAULT_CONFIG: GrokTuiConfig = {
 		gitBranch: false,
 		thinking: false,
 		cost: false,
+		indent: 1,
 	},
 };
 
