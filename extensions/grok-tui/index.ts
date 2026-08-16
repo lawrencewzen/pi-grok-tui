@@ -78,6 +78,14 @@ export default function (pi: ExtensionAPI) {
 		install(ctx);
 	});
 
+	// pi answers to /quit but not /exit. A command context's shutdown() is the
+	// same path /quit takes: immediate while idle, deferred to the end of the
+	// turn otherwise.
+	pi.registerCommand("exit", {
+		description: "Quit pi (same as /quit)",
+		handler: async (_args, ctx) => ctx.shutdown(),
+	});
+
 	pi.registerCommand("grok-tui", {
 		description: "Toggle the Grok TUI chrome, or show what it resolved",
 		handler: async (args, ctx) => {

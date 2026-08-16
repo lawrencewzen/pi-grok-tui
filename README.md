@@ -104,7 +104,7 @@
 - `footer.gitBranch` / `footer.thinking` / `footer.cost` — 打开会多出 `| main +2`、`| high`、`| 0.31` 这几段
 - `footer.indent` — footer 左缩进几格，默认 `1`。框线字符是画在字格正中的，文字却从字格左边起笔，所以 footer 落在第 0 列时会显得比上面的框线左出半格；缩进一格把它压回框线上。想要严格的网格对齐就设 `0`
 
-命令：`/grok-tui`（看当前解析结果）、`/grok-tui on|off`、`/grok-tui reload`、`/grok-tui thinking [show|hide]`（不带参数就是切换，等价于 `alt+t`）。
+命令：`/grok-tui`（看当前解析结果）、`/grok-tui on|off`、`/grok-tui reload`、`/grok-tui thinking [show|hide]`（不带参数就是切换，等价于 `alt+t`）、`/exit`（pi 只认 `/quit`，这里补一个同义词，走的是同一条退出路径）。
 
 ### 思考块为什么要交给扩展
 
