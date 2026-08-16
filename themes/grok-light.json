@@ -60,7 +60,7 @@
 		"mdLinkUrl": "textDim",
 		"mdCode": "codeSky",
 		"mdCodeBlock": "ink",
-		"mdCodeBlockBorder": "line",
+		"mdCodeBlockBorder": "lineMuted",
 		"mdQuote": "textSecondary",
 		"mdQuoteBorder": "line",
 		"mdHr": "line",

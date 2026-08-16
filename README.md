@@ -123,6 +123,14 @@ palette 1/2/12 = #c6787a / #a8b380 / #a9c1cf
 - **画布颜色**属于终端。pi 只画文字和局部色块。
 - **字体**属于终端。这套配色是照着 `Maple Mono NF CN` 校的，Nerd Font 图标也依赖它。
 
+### 代码块
+
+pi 不给代码块画框、也不铺底色，而是把 ` ``` ` 围栏原样打出来当上下边界（`markdown.js` 里的 `case "code"`，字符是写死的，主题只能给它上色）。这里把 `mdCodeBlockBorder` 压到 `#1f1f1f`，围栏基本溶进画布，剩下的就是一段缩进文字。想换成左侧竖线，在 pi 的 `settings.json` 里设代码行前缀——这个字符串会原样贴在每行代码前面，可以带 ANSI：
+
+```json
+{ "markdown": { "codeBlockIndent": "\u001b[38;2;74;74;78m▏\u001b[39m " } }
+```
+
 ## 开发
 
 ```bash
