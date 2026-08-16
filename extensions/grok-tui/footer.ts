@@ -62,6 +62,17 @@ export class GrokFooter implements Component {
 			if (cost !== null) out.push({ icon: this.glyphs.cost, text: cost.toFixed(2) });
 		}
 
+		// Whatever other extensions published through ctx.ui.setStatus(). pi's own
+		// footer gives these a line of their own; here they are segments like the
+		// rest, sorted by key the same way, and last so a narrow terminal drops
+		// them before it drops the context gauge.
+		if (this.config.footer.extensions) {
+			for (const [, raw] of [...this.data.getExtensionStatuses()].sort(([a], [b]) => a.localeCompare(b))) {
+				const text = raw.replace(/[\r\n\t]+/g, " ").replace(/ {2,}/g, " ").trim();
+				if (text) out.push({ icon: "", text });
+			}
+		}
+
 		return out;
 	}
 
@@ -84,7 +95,9 @@ export class GrokFooter implements Component {
 		// Icons sit one step darker than the text they label, so they read as
 		// markers rather than decoration.
 		const painted = this.segments().map((seg) => {
-			const text = theme.fg(seg.color ?? "muted", seg.text);
+			// An extension may hand its status over pre-colored; painting over it
+			// would leave its own resets stranded mid-segment.
+			const text = seg.text.includes("\x1b") ? seg.text : theme.fg(seg.color ?? "muted", seg.text);
 			return seg.icon ? `${theme.fg("dim", seg.icon)} ${text}` : text;
 		});
 		const separator = theme.fg("border", " | ");

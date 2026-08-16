@@ -44,6 +44,8 @@ export interface GrokTuiConfig {
 		gitBranch: boolean;
 		thinking: boolean;
 		cost: boolean;
+		/** Show what other extensions published through `ctx.ui.setStatus()`. */
+		extensions: boolean;
 		/**
 		 * Left indent, in cells. Box-drawing glyphs sit in the middle of their cell
 		 * while text starts at its left edge, so a footer on column 0 reads as half
@@ -76,6 +78,7 @@ export const DEFAULT_CONFIG: GrokTuiConfig = {
 		gitBranch: false,
 		thinking: true,
 		cost: false,
+		extensions: true,
 		indent: 1,
 	},
 };

@@ -33,7 +33,11 @@ const pi = {
 		{ name: "grok-tui", source: "extension" },
 	],
 };
-const footerData = { getGitBranch: () => "main", onBranchChange: () => () => {} };
+const footerData = {
+	getGitBranch: () => "main",
+	getExtensionStatuses: () => new Map([["usage", "codex 87% 5h 42% wk"]]),
+	onBranchChange: () => () => {},
+};
 
 const rule = (label) => console.log(`\n\x1b[2m── ${label} ${"─".repeat(Math.max(0, WIDTH - label.length - 4))}\x1b[22m`);
 const show = (lines) => {
