@@ -1,10 +1,25 @@
-# pi-grok-tui
+<div align="center">
 
-A Grok-styled look for [pi](https://github.com/earendil-works/pi) — a theme for the colors, an extension for the layout.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/lawrencewzen/pi-grok-tui/main/docs/wordmark-dark.svg">
+  <img src="https://raw.githubusercontent.com/lawrencewzen/pi-grok-tui/main/docs/wordmark-light.svg" alt="pi-grok-tui" width="240">
+</picture>
 
-[中文](README.zh-CN.md)
+<p>
+  A Grok-styled look for <a href="https://github.com/earendil-works/pi">pi</a><br>
+  <sub>a theme for the colors, an extension for the layout</sub>
+</p>
 
-![pi with the grok-tui theme and extension: framed two-column header, single-line footer](https://raw.githubusercontent.com/lawrencewzen/pi-grok-tui/main/docs/screenshot.png)
+<p>
+  <a href="https://www.npmjs.com/package/pi-grok-tui"><img alt="npm" src="https://img.shields.io/npm/v/pi-grok-tui?style=flat-square&labelColor=101010&color=3a3a3a"></a>
+  <a href="LICENSE"><img alt="license MIT" src="https://img.shields.io/badge/license-MIT-3a3a3a?style=flat-square&labelColor=101010"></a>
+  <img alt="requires pi 0.84 or newer" src="https://img.shields.io/badge/pi-%E2%89%A5%200.84-3a3a3a?style=flat-square&labelColor=101010">
+  <a href="README.zh-CN.md"><img alt="中文文档" src="https://img.shields.io/badge/docs-zh--CN-3a3a3a?style=flat-square&labelColor=101010"></a>
+</p>
+
+<img alt="pi with the grok-tui theme and extension: framed two-column header, single-line footer" src="https://raw.githubusercontent.com/lawrencewzen/pi-grok-tui/main/docs/screenshot.png">
+
+</div>
 
 ## What it is
 

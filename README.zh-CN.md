@@ -1,10 +1,25 @@
-# pi-grok-tui
+<div align="center">
 
-给 [pi](https://github.com/earendil-works/pi) 的一套 Grok 风格外观——主题管颜色，扩展管布局。
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/lawrencewzen/pi-grok-tui/main/docs/wordmark-dark.svg">
+  <img src="https://raw.githubusercontent.com/lawrencewzen/pi-grok-tui/main/docs/wordmark-light.svg" alt="pi-grok-tui" width="240">
+</picture>
 
-[English](README.md)
+<p>
+  给 <a href="https://github.com/earendil-works/pi">pi</a> 的一套 Grok 风格外观<br>
+  <sub>主题管颜色，扩展管布局</sub>
+</p>
 
-![装上 grok-tui 后的 pi：带框的两栏 header，单行 footer](https://raw.githubusercontent.com/lawrencewzen/pi-grok-tui/main/docs/screenshot.png)
+<p>
+  <a href="https://www.npmjs.com/package/pi-grok-tui"><img alt="npm" src="https://img.shields.io/npm/v/pi-grok-tui?style=flat-square&labelColor=101010&color=3a3a3a"></a>
+  <a href="LICENSE"><img alt="license MIT" src="https://img.shields.io/badge/license-MIT-3a3a3a?style=flat-square&labelColor=101010"></a>
+  <img alt="需要 pi 0.84 或更新版本" src="https://img.shields.io/badge/pi-%E2%89%A5%200.84-3a3a3a?style=flat-square&labelColor=101010">
+  <a href="README.md"><img alt="English docs" src="https://img.shields.io/badge/docs-English-3a3a3a?style=flat-square&labelColor=101010"></a>
+</p>
+
+<img alt="装上 grok-tui 后的 pi：带框的两栏 header，单行 footer" src="https://raw.githubusercontent.com/lawrencewzen/pi-grok-tui/main/docs/screenshot.png">
+
+</div>
 
 ## 这是什么
 

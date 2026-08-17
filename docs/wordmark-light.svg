@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 132" width="340" height="132" role="img" aria-label="pi-grok-tui">
+	<path fill="#0f0f0f" shape-rendering="crispEdges" d="M144.0 0h13v13h-13z M157.0 0h13v13h-13z M170.0 0h13v13h-13z M144.0 13h13v13h-13z M170.0 13h13v13h-13z M144.0 26h13v13h-13z M157.0 26h13v13h-13z M183.0 26h13v13h-13z M144.0 39h13v13h-13z M183.0 39h13v13h-13z"/>
+	<text x="170.0" y="110" fill="#0f0f0f" text-anchor="middle" textLength="224.39999999999998" lengthAdjust="spacingAndGlyphs"
+		font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="34" font-weight="600">pi-grok-tui</text>
+</svg>
