@@ -4,21 +4,7 @@
 
 [English](README.md)
 
-```
-┌─ pi v0.84.2 ───────────────────────────────────────────────────────────────┐
-│                                         Welcome                            │
-│      █████████                          Ask pi anything                    │
-│      ███   ███                          ──────────                         │
-│      ██████   ███                       Commands 7                         │
-│      ███      ███                       /review                            │
-│                                         /changelog                         │
-│      Let's build something great        /grok-tui                          │
-│      DeepSeek Chat · high               /compact                           │
-│      ~/Projects/pi-grok-tui             /help for all                      │
-└────────────────────────────────────────────────────────────────────────────┘
-
-~/Projects/pi-grok-tui | DeepSeek Chat | high | 18k/128k · 86% left
-```
+![装上 grok-tui 后的 pi：带框的两栏 header，单行 footer](https://raw.githubusercontent.com/lawrencewzen/pi-grok-tui/main/docs/screenshot.png)
 
 ## 这是什么
 

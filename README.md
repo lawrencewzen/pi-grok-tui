@@ -4,21 +4,7 @@ A Grok-styled look for [pi](https://github.com/earendil-works/pi) — a theme fo
 
 [中文](README.zh-CN.md)
 
-```
-┌─ pi v0.84.2 ───────────────────────────────────────────────────────────────┐
-│                                         Welcome                            │
-│      █████████                          Ask pi anything                    │
-│      ███   ███                          ──────────                         │
-│      ██████   ███                       Commands 7                         │
-│      ███      ███                       /review                            │
-│                                         /changelog                         │
-│      Let's build something great        /grok-tui                          │
-│      DeepSeek Chat · high               /compact                           │
-│      ~/Projects/pi-grok-tui             /help for all                      │
-└────────────────────────────────────────────────────────────────────────────┘
-
-~/Projects/pi-grok-tui | DeepSeek Chat | high | 18k/128k · 86% left
-```
+![pi with the grok-tui theme and extension: framed two-column header, single-line footer](https://raw.githubusercontent.com/lawrencewzen/pi-grok-tui/main/docs/screenshot.png)
 
 ## What it is
 
