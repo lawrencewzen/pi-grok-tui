@@ -23,13 +23,15 @@ const ctx = {
 };
 const pi = {
 	getThinkingLevel: () => "high",
+	// Stand-in names, not anyone's real command list: two of the user's own
+	// skills/prompts (which pickTips prefers) and the built-ins behind them.
 	getCommands: () => [
-		{ name: "pi-subagents", source: "skill" },
-		{ name: "parallel-review", source: "prompt" },
-		{ name: "review-loop", source: "prompt" },
-		{ name: "gather-context-and-clarify", source: "prompt" },
+		{ name: "changelog", source: "skill" },
+		{ name: "review", source: "prompt" },
 		{ name: "settings", source: "extension" },
-		{ name: "export", source: "extension" },
+		{ name: "model", source: "extension" },
+		{ name: "compact", source: "extension" },
+		{ name: "new", source: "extension" },
 		{ name: "grok-tui", source: "extension" },
 	],
 };

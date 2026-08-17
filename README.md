@@ -10,15 +10,17 @@
 │      █████████                          Ask pi anything                    │
 │      ███   ███                          ──────────                         │
 │      ██████   ███                       Commands 7                         │
-│      ███      ███                       /pi-subagents                      │
-│                                         /gather-context-and-clarify        │
-│      Let's build something great        /review-loop                       │
-│      DeepSeek Chat · high               /parallel-review                   │
-│      ~/Projects/pi-grok-tui            /help for all                      │
+│      ███      ███                       /review                            │
+│                                         /changelog                         │
+│      Let's build something great        /grok-tui                          │
+│      DeepSeek Chat · high               /compact                           │
+│      ~/Projects/pi-grok-tui             /help for all                      │
 └────────────────────────────────────────────────────────────────────────────┘
 
 ~/Projects/pi-grok-tui | DeepSeek Chat | high | 18k/128k · 86% left
 ```
+
+右栏那几条命令是抽样，每次启动都不同——`/review`、`/changelog` 只是示意，实际显示的是你自己装的 skill 和 prompt。
 
 ## 装什么、不装什么
 
@@ -46,36 +48,28 @@ pi install npm:pi-grok-tui     # 主题 + 扩展一起进来
 pi remove npm:pi-grok-tui      # 卸载
 ```
 
-pi 只负责装包，两件收尾的事要自己在 `~/.pi/agent/settings.json` 里做（原因见下）：
-
-```json
-{ "theme": "grok", "quietStartup": true }
-```
-
-再把 `~/.pi/agent/open-tui.json` 里的 `"enabled"` 改成 `false`（如果装过 `pi-open-tui`）。
-
-或者克隆仓库用脚本装——软链主题、按路径注册扩展，上面两件事一并办了，改代码即时生效，适合开发：
-
-```bash
-git clone https://github.com/lawrencewzen/pi-grok-tui.git && cd pi-grok-tui
-./install.sh              # 主题 + 扩展，并把 pi-open-tui 置为 enabled:false
-./install.sh --themes     # 只装主题，不动界面
-./install.sh --uninstall  # 全部还原
-```
-
 装完重启 pi。主题选择：`/settings` 里选 `grok`，或写进 `~/.pi/agent/settings.json`：
 
 ```json
 { "theme": "grok" }
 ```
 
-`pi-open-tui` 必须停用——它和本扩展抢同一组 API，后加载的会覆盖前面的。脚本只是把它的 `enabled` 翻成 `false`，不卸载，`--uninstall` 会翻回来。同时会设 `quietStartup: true`，把 pi 那段 `[Skills] [Prompts] [Extensions] [Themes]` 清单收起来（诊断和冲突警告不受影响，照常显示）。
+想连 pi 启动时那段 `[Skills] [Prompts] [Extensions] [Themes]` 清单一起收起来（header 右栏本来就把真实命令列出来了），再加一条 `"quietStartup": true`。诊断和冲突警告不受影响，照常显示。
 
-**注意加载顺序**：`~/.pi/agent/extensions/` 是自动发现目录，加载顺序排在 `settings.json` 里的扩展之后。那里面任何调 `setHeader` / `setFooter` / `setEditorComponent` 的文件都会覆盖本扩展。`install.sh` 会扫描并列出这类文件。
+或者克隆仓库用脚本装——软链主题、按路径注册扩展，改代码即时生效，适合开发：
+
+```bash
+git clone https://github.com/lawrencewzen/pi-grok-tui.git && cd pi-grok-tui
+./install.sh              # 主题 + 扩展
+./install.sh --themes     # 只装主题，不动界面
+./install.sh --uninstall  # 全部还原
+```
+
+**只有一套 chrome 能生效**：`setHeader` / `setFooter` / `setEditorComponent` 每个都只有一个槽位，最后加载的扩展赢。如果你装了别的改 header、footer 或输入框的扩展，两个之中得停掉一个——留着谁取决于你，本包不会替你动别人的配置。`~/.pi/agent/extensions/` 是自动发现目录，加载顺序还排在 `settings.json` 里的扩展之后，所以那里面的文件优先级最高；`install.sh` 会扫一遍并把这类文件列出来。
 
 **想让输入框钉在屏幕底部**：那是 pi 的布局模式，扩展够不到——在 `settings.json` 里设 `"tuiMode": "fullscreen"`，pi 走终端备用屏，输入框固定在最下面，内容区由 pi 自己滚。代价是终端原生的滚轮和回滚缓冲交给了 pi（它自带滚动、搜索、选中复制），退出后屏幕恢复原样，打不打印 transcript 由 `fullscreenExitOutput` 决定。这个模式下 `clearOnStart` 就没意义了——备用屏本来就是干净的。
 
-**与 `pi-working-phrase` 冲突**：`workingStats` 每 250ms 重写 working 行，会盖掉那个包的随机工作词。想留着它就设 `workingStats: false`，想要统计就二选一。
+**working 行也是独占的**：`workingStats` 每 250ms 重写它，别的扩展往那儿写的东西会被盖掉（比如那些换随机工作词的包）。想把这行让出去就设 `workingStats: false`。
 
 ## 配置
 
@@ -117,7 +111,7 @@ git clone https://github.com/lawrencewzen/pi-grok-tui.git && cd pi-grok-tui
 - `collapseTools` — 启动时折叠工具输出。这只设初始状态，`Ctrl+O` 照常切换
 - `icons` — `off` 纯文字 / `nerd` 强制开 Nerd Font 图标 / `auto` 按终端类型猜。`PI_NERD_FONT=0` 可强制关
 - `footer.thinking` — 显示当前思考强度（`off` / `low` / `high` …），默认开。和输入框边框是同一个信息，边框用颜色说，footer 用字说
-- `footer.extensions` — 显示别的扩展通过 `ctx.ui.setStatus()` 发出来的状态（比如 `pi-usage` 的 `codex 87% 5h 42% wk`），按 key 字母序接在最后一段，默认开。pi 自带 footer 是给它们单开一行，这里并进同一行，终端太窄时它们先被截掉，上下文那段保得住
+- `footer.extensions` — 显示别的扩展通过 `ctx.ui.setStatus()` 发出来的状态（用量、同步状态之类，各家自己定内容），按 key 字母序接在最后一段，默认开。pi 自带 footer 是给它们单开一行，这里并进同一行，终端太窄时它们先被截掉，上下文那段保得住
 - `footer.contextTokens` — 上下文那段除了百分比，再写出 `已用/窗口` 的具体数字（`18k/128k · 86% left`），默认开。百分比说的是还剩多少，数字说的是这间屋子有多大——同样是「剩 20%」，128k 的窗口只剩 25k，1M 的窗口还剩 200k。`k` / `M` 为单位，不满 10k 保留一位小数（`4.2k`）。关掉就退回单独一个 `86% left`
 - `footer.gitBranch` / `footer.cost` — 打开会多出 `| main`、`| 0.31` 这两段
 - `footer.indent` — footer 左缩进几格，默认 `1`。框线字符是画在字格正中的，文字却从字格左边起笔，所以 footer 落在第 0 列时会显得比上面的框线左出半格；缩进一格把它压回框线上。想要严格的网格对齐就设 `0`
@@ -156,7 +150,6 @@ pi 不给代码块画框、也不铺底色，而是把 ` ``` ` 围栏原样打�
 node preview.mjs themes/grok.json   # 在终端里渲染一屏假 TUI，看配色
 node preview-chrome.mjs 78          # 不启动 pi，直接渲染 header/footer 各变体，看布局
 node validate.mjs                   # 校验主题 token 完整性与 var 引用
-open prototype.html                 # 设计稿：对比、变体、色板、决策记录
 ```
 
 主题文件是软链，编辑后 pi 会热重载。扩展改完要重启 pi 或 `/grok-tui reload`。

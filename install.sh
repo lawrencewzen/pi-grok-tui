@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 # Install the grok theme and TUI chrome into pi.
 #
-#   ./install.sh            link themes + register the extension + disable pi-open-tui
-#   ./install.sh --themes   themes only, leave the chrome alone
+#   ./install.sh              link themes + register the extension
+#   ./install.sh --themes     themes only, leave the chrome alone
 #   ./install.sh --uninstall  undo all of the above
 #
-# Nothing is deleted: pi-open-tui is only flipped to enabled:false, and the
-# extension is added to / removed from settings.json by path.
+# Only this package's own footprint is touched: theme symlinks, one entry in
+# settings.json, and quietStartup. Extensions that conflict are reported, never
+# edited — which one you keep is your call, not the script's.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 agent="${PI_AGENT_DIR:-$HOME/.pi/agent}"
 themes_dir="$agent/themes"
 settings="$agent/settings.json"
-open_tui="$agent/open-tui.json"
 entry="$root/extensions/grok-tui/index.ts"
 mode="${1:-}"
 
@@ -79,25 +79,12 @@ path.write_text(json.dumps(data, indent=2) + "\n")
 QUIET
 }
 
-# $1 = true | false
-set_open_tui() {
-	[ -f "$open_tui" ] || return 0
-	python3 - "$open_tui" "$1" <<'PY'
-import json, sys, pathlib
-path, value = pathlib.Path(sys.argv[1]), sys.argv[2] == "true"
-data = json.loads(path.read_text())
-if data.get("enabled") == value:
-    print(f"unchanged   pi-open-tui enabled={str(value).lower()}")
-else:
-    data["enabled"] = value
-    path.write_text(json.dumps(data, indent=2) + "\n")
-    print(f"set         pi-open-tui enabled={str(value).lower()}")
-PY
-}
-
 # setHeader/setFooter/setEditorComponent each have exactly one slot — whoever
 # loads last wins. Auto-discovered extensions load after settings.json entries,
 # so a stray file in extensions/ silently overrides this package.
+#
+# Reported, not resolved: another extension's config belongs to whoever installed
+# it, and the script has no way to know which of the two you'd rather keep.
 check_conflicts() {
 	local found=""
 	for f in "$agent"/extensions/*.ts "$agent"/extensions/*.js; do
@@ -108,9 +95,9 @@ check_conflicts() {
 	done
 	[ -z "$found" ] && return 0
 	echo
-	echo "⚠️  这些扩展也在改 header/footer/编辑器，会覆盖本扩展："
+	echo "⚠️  这些扩展也在改 header/footer/编辑器，和本扩展抢同一组槽位，后加载的赢："
 	printf "%b" "$found"
-	echo "   移到 $agent/extensions-backup/ 即可停用（不会删除）。"
+	echo "   两个之中停掉一个再重启 pi。移到 $agent/extensions-backup/ 即可停用（不会删除）。"
 }
 
 case "$mode" in
@@ -118,7 +105,6 @@ case "$mode" in
 	unlink_themes
 	settings_extension remove
 	set_quiet_startup off
-	set_open_tui true
 	echo
 	echo "回到原状。重启 pi 生效。"
 	;;
@@ -131,7 +117,6 @@ case "$mode" in
 	link_themes
 	settings_extension add
 	set_quiet_startup on
-	set_open_tui false
 	check_conflicts
 	echo
 	echo "装好了。重启 pi 生效。"

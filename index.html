@@ -343,11 +343,11 @@
 <span class="c-dim">│</span>                                         <span class="logo-art">███  ███ █ ███</span>        <span class="c-muted">Ask pi anything</span>    <span class="c-dim">│</span>
 <span class="c-dim">│</span>                                         <span class="logo-art">███████   ███</span>        <span class="c-dim">──────────</span>         <span class="c-dim">│</span>
 <span class="c-dim">│</span>                                         <span class="logo-art">███  ███ ███</span>         <span class="c-muted">Commands 7</span>        <span class="c-dim">│</span>
-<span class="c-dim">│</span>                                         <span class="c-muted">Let's build something great</span>   <span class="c-blue">/pi-subagents</span>      <span class="c-dim">│</span>
+<span class="c-dim">│</span>                                         <span class="c-muted">Let's build something great</span>   <span class="c-blue">/review</span>            <span class="c-dim">│</span>
 <span class="c-dim">│</span>                                         <span class="c-muted">DeepSeek Chat · high</span>          <span class="c-blue">/grok-tui reload</span>  <span class="c-dim">│</span>
 <span class="c-dim">│</span>                                         <span class="c-dim">~/Projects/pi-grok-tui</span>        <span class="c-dim">/help for all</span>     <span class="c-dim">│</span>
 <span class="c-dim">└──────────────────────────────────────────────────────────────────────────────┘</span>
-<span class="c-text">~/Projects/pi-grok-tui</span> <span class="c-dim">|</span> <span class="c-muted">DeepSeek Chat</span> <span class="c-dim">|</span> <span class="c-green">86% left</span> <span class="cursor-blink">▊</span>
+<span class="c-text">~/Projects/pi-grok-tui</span> <span class="c-dim">|</span> <span class="c-muted">DeepSeek Chat</span> <span class="c-dim">|</span> <span class="c-green">18k/128k · 86% left</span> <span class="cursor-blink">▊</span>
 
 <span class="c-dim">Working 12s · 3.4k tok</span> <span class="c-amber">⣾</span> <span class="c-muted">reading grok.json…</span>
 <span class="c-dim">▌</span><span class="c-muted"> tool · </span><span class="c-blue">read</span> <span class="c-muted">themes/grok.json</span> <span class="c-green">✓ 4.2s</span>
@@ -356,7 +356,7 @@
 <span class="c-green">✓</span> <span class="c-text">theme loaded</span> <span class="c-dim">·</span> <span class="c-amber">grok</span> <span class="c-dim">·</span> <span class="c-amber">grok-light</span>
 <span class="c-green">✓</span> <span class="c-text">extension loaded</span> <span class="c-dim">·</span> <span class="c-muted">header / footer / editor / spinner / working</span></pre>
         <div class="term-status">
-          <span class="bar"></span> <span>DeepSeek Chat · high</span> <span class="c-dim">|</span> <span>86% left</span>
+          <span class="bar"></span> <span>DeepSeek Chat · high</span> <span class="c-dim">|</span> <span>18k/128k · 86% left</span>
         </div>
       </div>
     </div>
@@ -454,14 +454,13 @@
     <div class="section-head">
       <div class="eyebrow">Install</div>
       <h2>安装 & 运行</h2>
-      <p>一条脚本装完主题 + 扩展，并自动把抢同一组 API 的 <code>pi-open-tui</code> 置为 <code>enabled: false</code>。装完重启 pi。</p>
+      <p>一条命令装完主题 + 扩展，选上主题，重启 pi。</p>
     </div>
 
     <div class="codeblock">
-      <div class="cb-head"><span>install.sh</span><span class="lang">bash</span></div>
-<pre><span class="pm">$</span> <span class="fn">./install.sh</span>              <span class="cm"># 主题 + 扩展，并把 pi-open-tui 置为 enabled:false</span>
-<span class="pm">$</span> <span class="fn">./install.sh</span> <span class="st">--themes</span>     <span class="cm"># 只装主题，不动界面</span>
-<span class="pm">$</span> <span class="fn">./install.sh</span> <span class="st">--uninstall</span>  <span class="cm"># 全部还原（pi-open-tui 会翻回来）</span></pre>
+      <div class="cb-head"><span>npm</span><span class="lang">bash</span></div>
+<pre><span class="pm">$</span> <span class="fn">pi install</span> <span class="st">npm:pi-grok-tui</span>   <span class="cm"># 主题 + 扩展一起进来</span>
+<span class="pm">$</span> <span class="fn">pi remove</span> <span class="st">npm:pi-grok-tui</span>    <span class="cm"># 卸载</span></pre>
     </div>
 
     <div class="codeblock">
@@ -470,7 +469,11 @@
     </div>
 
     <p style="color:var(--muted); font-size:14px;">
-      注意加载顺序：<code style="font-family:var(--mono); color:var(--cyan);">~/.pi/agent/extensions/</code> 是自动发现目录，排在 <code>settings.json</code> 里的扩展之后——那里任何调 <code>setHeader</code>/<code>setFooter</code>/<code>setEditorComponent</code> 的文件都会覆盖本扩展。安装脚本会扫描并列出这类文件。
+      想改代码就克隆仓库跑 <code style="font-family:var(--mono); color:var(--cyan);">./install.sh</code>——软链主题、按路径注册扩展，改完即时生效；<code>--themes</code> 只装配色，<code>--uninstall</code> 全部还原。
+    </p>
+
+    <p style="color:var(--muted); font-size:14px;">
+      只有一套 chrome 能生效：<code style="font-family:var(--mono); color:var(--cyan);">setHeader</code>/<code>setFooter</code>/<code>setEditorComponent</code> 每个只有一个槽位，最后加载的赢。装了别的改界面的扩展就得二选一。<code style="font-family:var(--mono); color:var(--cyan);">~/.pi/agent/extensions/</code> 是自动发现目录，排在 <code>settings.json</code> 里的扩展之后，优先级最高；安装脚本会扫描并列出这类文件。
     </p>
   </div>
 </section>
@@ -537,7 +540,7 @@
       <div class="config-item">
         <div class="key">workingStats</div>
         <div class="vals"><b>true</b> · false</div>
-        <p>working 行加秒数和输出 token；与 pi-working-phrase 冲突时二选一。</p>
+        <p>working 行加秒数和输出 token；这行是独占的，别的扩展往那儿写的会被盖掉。</p>
       </div>
       <div class="config-item">
         <div class="key">collapseTools</div>

@@ -1,9 +1,8 @@
 import type { IconMode } from "./config.ts";
 
 /**
- * Footer glyphs. Nerd Font codepoints are Material Design icons (nf-md-*),
- * the same family pi-open-tui uses, so a terminal that renders its footer
- * renders this one too.
+ * Footer glyphs. Nerd Font codepoints are Material Design icons (nf-md-*) —
+ * one family, so a font that has any of them has all of them.
  */
 export interface Glyphs {
 	cwd: string;
@@ -28,8 +27,8 @@ const NONE: Glyphs = { cwd: "", branch: "", model: "", context: "", thinking: ""
 
 /**
  * Terminals whose users have very likely installed a Nerd Font. A TUI can't
- * read the terminal's font, so this is a guess — the same one pi-open-tui and
- * Starship make. PI_NERD_FONT=0 opts out, PI_NERD_FONT=1 forces it on.
+ * read the terminal's font, so this is a guess — the same one Starship makes.
+ * PI_NERD_FONT=0 opts out, PI_NERD_FONT=1 forces it on.
  */
 const NERD_FONT_TERMINALS = new Set(["ghostty", "WezTerm", "iTerm.app", "kitty", "rio", "Tabby", "vscode", "Warp"]);
 
