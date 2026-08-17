@@ -1,5 +1,6 @@
 import { estimateTokens, type ExtensionAPI, type ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { GrokTuiConfig } from "./config.ts";
+import { formatTokens } from "./utils.ts";
 
 const TICK_MS = 250;
 
@@ -7,12 +8,6 @@ function formatElapsed(ms: number): string {
 	const total = Math.floor(ms / 1000);
 	if (total < 60) return `${total}s`;
 	return `${Math.floor(total / 60)}m${String(total % 60).padStart(2, "0")}s`;
-}
-
-function formatTokens(n: number): string {
-	if (n < 1000) return `${n}`;
-	if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}k`;
-	return `${(n / 1_000_000).toFixed(1)}M`;
 }
 
 /**

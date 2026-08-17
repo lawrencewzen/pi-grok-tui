@@ -44,6 +44,12 @@ export interface GrokTuiConfig {
 		gitBranch: boolean;
 		thinking: boolean;
 		cost: boolean;
+		/**
+		 * Spell the context gauge out as `used/window` next to the percentage.
+		 * The percentage says how much room is left; the counts say how big the
+		 * room is, which is what tells you whether 20% is generous or nothing.
+		 */
+		contextTokens: boolean;
 		/** Show what other extensions published through `ctx.ui.setStatus()`. */
 		extensions: boolean;
 		/**
@@ -78,6 +84,7 @@ export const DEFAULT_CONFIG: GrokTuiConfig = {
 		gitBranch: false,
 		thinking: true,
 		cost: false,
+		contextTokens: true,
 		extensions: true,
 		indent: 1,
 	},

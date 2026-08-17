@@ -17,7 +17,7 @@
 │      ~/Projects/pi-grok-tui            /help for all                      │
 └────────────────────────────────────────────────────────────────────────────┘
 
-~/Projects/pi-grok-tui | DeepSeek Chat | high | 86% left
+~/Projects/pi-grok-tui | DeepSeek Chat | high | 18k/128k · 86% left
 ```
 
 ## 装什么、不装什么
@@ -26,7 +26,7 @@
 |---|---|---|
 | 启动清屏 | 扩展 | 在 pi 画第一帧之前清掉屏幕、回滚缓冲和你敲的那行 `pi` |
 | header | 扩展 | 直角 hairline 框、白色方块 π、右栏命令提示；**启动动画真的会播** |
-| footer | 扩展 | 单行 `cwd \| 模型 \| 思考强度 \| 剩余上下文`，`\|` 分隔，默认纯文字（Nerd Font 图标可选）；别的扩展用 `setStatus()` 发的状态接在最后 |
+| footer | 扩展 | 单行 `cwd \| 模型 \| 思考强度 \| 已用/窗口 · 剩余上下文`，`\|` 分隔，默认纯文字（Nerd Font 图标可选）；别的扩展用 `setStatus()` 发的状态接在最后 |
 | 编辑器 | 扩展 | 方角闭合细框（pi 默认只有上下两条横线），边框色仍随 thinking 等级和 bash 模式变化 |
 | 编辑器光标 | 扩展 | 交给终端自己画（尊重你的 `cursor-style`），剥掉 pi 的反显方块 |
 | 补全面板 | 扩展 | 向上展开，输入框留在原地；面板本身仍由 pi 渲染 |
@@ -98,7 +98,7 @@ git clone https://github.com/lawrencewzen/pi-grok-tui.git && cd pi-grok-tui
   "workingLabel": "Working",
   "collapseTools": true,
   "icons": "off",
-  "footer": { "gitBranch": false, "thinking": true, "cost": false, "extensions": true, "indent": 1 }
+  "footer": { "gitBranch": false, "thinking": true, "cost": false, "contextTokens": true, "extensions": true, "indent": 1 }
 }
 ```
 
@@ -118,6 +118,7 @@ git clone https://github.com/lawrencewzen/pi-grok-tui.git && cd pi-grok-tui
 - `icons` — `off` 纯文字 / `nerd` 强制开 Nerd Font 图标 / `auto` 按终端类型猜。`PI_NERD_FONT=0` 可强制关
 - `footer.thinking` — 显示当前思考强度（`off` / `low` / `high` …），默认开。和输入框边框是同一个信息，边框用颜色说，footer 用字说
 - `footer.extensions` — 显示别的扩展通过 `ctx.ui.setStatus()` 发出来的状态（比如 `pi-usage` 的 `codex 87% 5h 42% wk`），按 key 字母序接在最后一段，默认开。pi 自带 footer 是给它们单开一行，这里并进同一行，终端太窄时它们先被截掉，上下文那段保得住
+- `footer.contextTokens` — 上下文那段除了百分比，再写出 `已用/窗口` 的具体数字（`18k/128k · 86% left`），默认开。百分比说的是还剩多少，数字说的是这间屋子有多大——同样是「剩 20%」，128k 的窗口只剩 25k，1M 的窗口还剩 200k。`k` / `M` 为单位，不满 10k 保留一位小数（`4.2k`）。关掉就退回单独一个 `86% left`
 - `footer.gitBranch` / `footer.cost` — 打开会多出 `| main`、`| 0.31` 这两段
 - `footer.indent` — footer 左缩进几格，默认 `1`。框线字符是画在字格正中的，文字却从字格左边起笔，所以 footer 落在第 0 列时会显得比上面的框线左出半格；缩进一格把它压回框线上。想要严格的网格对齐就设 `0`
 

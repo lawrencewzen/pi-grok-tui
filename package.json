@@ -1,6 +1,6 @@
 {
 	"name": "pi-grok-tui",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Grok-styled theme and TUI chrome for the pi coding agent: framed logo header with a real startup animation, single-line footer, square editor frame.",
 	"type": "module",
 	"license": "MIT",

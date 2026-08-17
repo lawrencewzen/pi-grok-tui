@@ -3,7 +3,7 @@ import type { Component, TUI } from "@earendil-works/pi-tui";
 import { truncateToWidth } from "@earendil-works/pi-tui";
 import type { GrokTuiConfig } from "./config.ts";
 import { type Glyphs, resolveGlyphs } from "./icons.ts";
-import { formatCwd, formatModel, formatThinking } from "./utils.ts";
+import { formatCwd, formatModel, formatThinking, formatTokens } from "./utils.ts";
 
 interface Segment {
 	icon: string;
@@ -37,7 +37,14 @@ export class GrokFooter implements Component {
 		const left = Math.max(0, Math.round(100 - usage.percent));
 		// The one place color is allowed back into the footer: running out of room.
 		const color = left < 10 ? "error" : left < 20 ? "warning" : "muted";
-		return { icon: this.glyphs.context, text: `${left}% left`, color };
+		// `tokens` is null exactly when `percent` is (pi derives one from the
+		// other), so the guard above already covers this — the check is here so
+		// the type narrows rather than to catch a case that can happen.
+		const counts =
+			this.config.footer.contextTokens && usage.tokens !== null
+				? `${formatTokens(usage.tokens)}/${formatTokens(usage.contextWindow)} · `
+				: "";
+		return { icon: this.glyphs.context, text: `${counts}${left}% left`, color };
 	}
 
 	private segments(): Segment[] {
