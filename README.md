@@ -14,10 +14,10 @@
 │                                         /gather-context-and-clarify        │
 │      Let's build something great        /review-loop                       │
 │      DeepSeek Chat · high               /parallel-review                   │
-│      ~/Projects/pi-tui-theme            /help for all                      │
+│      ~/Projects/pi-grok-tui            /help for all                      │
 └────────────────────────────────────────────────────────────────────────────┘
 
-~/Projects/pi-tui-theme | DeepSeek Chat | high | 86% left
+~/Projects/pi-grok-tui | DeepSeek Chat | high | 86% left
 ```
 
 ## 装什么、不装什么

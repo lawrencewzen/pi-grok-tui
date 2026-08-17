@@ -16,7 +16,7 @@ const tui = { requestRender() {}, terminal: { rows: 40, columns: WIDTH } };
 const ctx = {
 	mode: "tui",
 	ui: { theme },
-	cwd: `${process.env.HOME}/Projects/pi-tui-theme`,
+	cwd: `${process.env.HOME}/Projects/pi-grok-tui`,
 	model: { name: "DeepSeek Chat", id: "deepseek-chat", provider: "deepseek" },
 	getContextUsage: () => ({ tokens: 18000, contextWindow: 128000, percent: 14 }),
 	sessionManager: { getBranch: () => [] },
