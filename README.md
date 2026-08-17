@@ -1,8 +1,8 @@
 # pi-grok-tui
 
-给 [pi](https://github.com/earendil-works/pi) 的一套 Grok 风格外观：主题（颜色）+ 扩展（布局）。
+A Grok-styled look for [pi](https://github.com/earendil-works/pi) — a theme for the colors, an extension for the layout.
 
-不是 fork 任何现有包，从零写的，只用 pi 的公开 API（`setHeader` / `setFooter` / `setEditorComponent`）。
+[中文](README.zh-CN.md)
 
 ```
 ┌─ pi v0.84.2 ───────────────────────────────────────────────────────────────┐
@@ -20,172 +20,44 @@
 ~/Projects/pi-grok-tui | DeepSeek Chat | high | 18k/128k · 86% left
 ```
 
-右栏那几条命令是抽样，每次启动都不同——`/review`、`/changelog` 只是示意，实际显示的是你自己装的 skill 和 prompt。
+## What it is
 
-## 装什么、不装什么
+Two halves that install together.
 
-| 部件 | 归谁管 | 这里做了什么 |
-|---|---|---|
-| 启动清屏 | 扩展 | 在 pi 画第一帧之前清掉屏幕、回滚缓冲和你敲的那行 `pi` |
-| header | 扩展 | 直角 hairline 框、白色方块 π、右栏命令提示；**启动动画真的会播** |
-| footer | 扩展 | 单行 `cwd \| 模型 \| 思考强度 \| 已用/窗口 · 剩余上下文`，`\|` 分隔，默认纯文字（Nerd Font 图标可选）；别的扩展用 `setStatus()` 发的状态接在最后 |
-| 编辑器 | 扩展 | 方角闭合细框（pi 默认只有上下两条横线），边框色仍随 thinking 等级和 bash 模式变化 |
-| 编辑器光标 | 扩展 | 交给终端自己画（尊重你的 `cursor-style`），剥掉 pi 的反显方块 |
-| 补全面板 | 扩展 | 向上展开，输入框留在原地；面板本身仍由 pi 渲染 |
-| spinner | 扩展 | braille 转圈，换成重心恒定的一组帧（见下） |
-| working 行 | 扩展 | `Working 12s · 3.4k tok`，秒数和输出 token 每 250ms 刷新；推理时变 `Working with thinking` |
-| 工具输出 | 扩展 | 启动时折叠，`Ctrl+O`（pi 内置）随时展开 |
-| 启动清单 | pi 内核 | 替换不了，用 `quietStartup` 静音；header 右栏改从 `getCommands()` 取真实命令补上 |
-| 用户消息、工具框、语法高亮 | 主题 | 只能改颜色，结构是 pi 内核画的 |
-| 消息流缩进、工具框骨架 | pi 内核 | 扩展 API 够不到 |
+The **theme** carries the palette — dark and light. The **extension** redraws the chrome pi hands to extensions: a framed two-column header whose startup animation actually plays, a single-line footer, a closed editor frame, a spinner that doesn't bob, and a working line that counts seconds and output tokens. Tool output starts collapsed.
 
-## 安装
+It's written from scratch against pi's public API (`setHeader` / `setFooter` / `setEditorComponent`) — nothing forked, nothing patched. What that API doesn't reach stays pi's: the message stream, the tool boxes, the syntax highlighting. A theme can recolor those; it can't restructure them.
 
-从 npm 装（推荐）：
+## Install
 
 ```bash
-pi install npm:pi-grok-tui     # 主题 + 扩展一起进来
-pi remove npm:pi-grok-tui      # 卸载
+pi install npm:pi-grok-tui
 ```
 
-装完重启 pi。主题选择：`/settings` 里选 `grok`，或写进 `~/.pi/agent/settings.json`：
+Then pick the theme in `/settings`, or write it into `~/.pi/agent/settings.json`:
 
 ```json
 { "theme": "grok" }
 ```
 
-想连 pi 启动时那段 `[Skills] [Prompts] [Extensions] [Themes]` 清单一起收起来（header 右栏本来就把真实命令列出来了），再加一条 `"quietStartup": true`。诊断和冲突警告不受影响，照常显示。
+Restart pi. `/grok-tui` prints the config it resolved; the file behind it is `~/.pi/agent/grok-tui.json` and every part of the chrome can be turned off there individually.
 
-或者克隆仓库用脚本装——软链主题、按路径注册扩展，改代码即时生效，适合开发：
+Two things worth knowing. `setHeader`, `setFooter` and `setEditorComponent` have one slot each and the last extension to load wins, so if you run another chrome extension, keep one of the two. And if you'd rather hack on this than install it, clone the repo and run `./install.sh` — it symlinks the themes and registers the extension by path, so edits take effect in place.
 
-```bash
-git clone https://github.com/lawrencewzen/pi-grok-tui.git && cd pi-grok-tui
-./install.sh              # 主题 + 扩展
-./install.sh --themes     # 只装主题，不动界面
-./install.sh --uninstall  # 全部还原
-```
+## Design
 
-**只有一套 chrome 能生效**：`setHeader` / `setFooter` / `setEditorComponent` 每个都只有一个槽位，最后加载的扩展赢。如果你装了别的改 header、footer 或输入框的扩展，两个之中得停掉一个——留着谁取决于你，本包不会替你动别人的配置。`~/.pi/agent/extensions/` 是自动发现目录，加载顺序还排在 `settings.json` 里的扩展之后，所以那里面的文件优先级最高；`install.sh` 会扫一遍并把这类文件列出来。
+**White is the accent.** Depth comes from grayscale, not from hue. Color is kept for things that mean something — the one place it returns to the footer is the context gauge, which goes amber and then red as you run out of room.
 
-**想让输入框钉在屏幕底部**：那是 pi 的布局模式，扩展够不到——在 `settings.json` 里设 `"tuiMode": "fullscreen"`，pi 走终端备用屏，输入框固定在最下面，内容区由 pi 自己滚。代价是终端原生的滚轮和回滚缓冲交给了 pi（它自带滚动、搜索、选中复制），退出后屏幕恢复原样，打不打印 transcript 由 `fullscreenExitOutput` 决定。这个模式下 `clearOnStart` 就没意义了——备用屏本来就是干净的。
+**Numbers you can act on.** The footer reads `18k/128k · 86% left`, not a bare percentage. The same 20% is 25k tokens on a 128k window and 200k on a 1M one, and the number you decide to compact on is the absolute one.
 
-**working 行也是独占的**：`workingStats` 每 250ms 重写它，别的扩展往那儿写的东西会被盖掉（比如那些换随机工作词的包）。想把这行让出去就设 `workingStats: false`。
+**Nothing bobs.** pi's stock spinner runs two lit dots around a 2×4 braille grid, which moves the glyph's center of mass by about 21% of the font size every frame — the spinner visibly floats against the text beside it. This one lights seven of eight dots and rotates the gap instead: same braille cell, fixed bounding box, no jitter.
 
-## 配置
+**The animation plays.** The logo has 22 frames of startup choreography that pi-open-tui shipped but never ran — only its final frame was ever drawn. Here it plays, once per session, in grayscale.
 
-`~/.pi/agent/grok-tui.json`，改完 `/grok-tui reload`：
+**The terminal keeps what's the terminal's.** The canvas color and the font belong to your emulator, not to a theme, and the caret is left for the terminal to draw so it respects your `cursor-style`. The dark palette is tuned against Ghostty's Grok theme, so pi matches the `ls`, `git` and `vim` sharing that window. Retune it if your terminal theme differs — the three rules that carry over are: the accent is white, hierarchy is grayscale, color only where it carries meaning.
 
-```json
-{
-  "enabled": true,
-  "clearOnStart": true,
-  "thinkingInWorking": true,
-  "header": "full",
-  "headerAnimation": true,
-  "tagline": "Let's build something great",
-  "commandTips": 4,
-  "editorFrame": "box",
-  "cursor": "bar",
-  "completion": "above",
-  "spinner": "braille",
-  "workingStats": true,
-  "workingLabel": "Working",
-  "collapseTools": true,
-  "icons": "off",
-  "footer": { "gitBranch": false, "thinking": true, "cost": false, "contextTokens": true, "extensions": true, "indent": 1 }
-}
-```
+## Credits
 
-- `clearOnStart` — 启动时清屏：屏幕、回滚缓冲、连你敲的那行 `pi` 一起清掉，header 从第一行开始画。只在进程内清一次（`/new`、`/grok-tui reload` 不会再清，否则会打乱 pi 的差分渲染），`enabled: false` 时依然生效
-- `thinkingInWorking` — 思考状态并进 working 行：模型在推理时是 `Working with thinking 26s · ~2.7k tok`，不推理时就是 `Working …`。思考块本身怎么显示仍归 pi 管（`hideThinkingBlock`）
-- `header` — `full` 带框两栏 / `plain` 去框 / `logo` 只留标记
-- `headerAnimation` — 启动时播一次组装动画（22 帧 × 70ms）
-- `tagline` — logo 下那句话，设成 `""` 就没了
-- `commandTips` — 右栏抽样显示几个真实命令，优先你自己装的 skill 和 prompt。`0` 隐藏整个右栏
-- `editorFrame` — `box` 方角闭合框 / `lines` 回到 pi 默认的上下横线
-- `cursor` — `bar` 把光标交给终端自己画（用终端的 cursor-style）/ `block` 保留 pi 的反显方块
-- `completion` — `above` 补全向上展开 / `below` pi 的默认方向
-- `spinner` — `braille` 重心恒定的 braille 转圈（默认）/ `square` 方形帧但只有 4 帧 / `pi` 原生那组（会上下抖）
-- `workingStats` — working 行后面加秒数和输出 token
-- `workingLabel` — 那行前面的词
-- `collapseTools` — 启动时折叠工具输出。这只设初始状态，`Ctrl+O` 照常切换
-- `icons` — `off` 纯文字 / `nerd` 强制开 Nerd Font 图标 / `auto` 按终端类型猜。`PI_NERD_FONT=0` 可强制关
-- `footer.thinking` — 显示当前思考强度（`off` / `low` / `high` …），默认开。和输入框边框是同一个信息，边框用颜色说，footer 用字说
-- `footer.extensions` — 显示别的扩展通过 `ctx.ui.setStatus()` 发出来的状态（用量、同步状态之类，各家自己定内容），按 key 字母序接在最后一段，默认开。pi 自带 footer 是给它们单开一行，这里并进同一行，终端太窄时它们先被截掉，上下文那段保得住
-- `footer.contextTokens` — 上下文那段除了百分比，再写出 `已用/窗口` 的具体数字（`18k/128k · 86% left`），默认开。百分比说的是还剩多少，数字说的是这间屋子有多大——同样是「剩 20%」，128k 的窗口只剩 25k，1M 的窗口还剩 200k。`k` / `M` 为单位，不满 10k 保留一位小数（`4.2k`）。关掉就退回单独一个 `86% left`
-- `footer.gitBranch` / `footer.cost` — 打开会多出 `| main`、`| 0.31` 这两段
-- `footer.indent` — footer 左缩进几格，默认 `1`。框线字符是画在字格正中的，文字却从字格左边起笔，所以 footer 落在第 0 列时会显得比上面的框线左出半格；缩进一格把它压回框线上。想要严格的网格对齐就设 `0`
+Logo grid coordinates and the 22-frame choreography come from [pi-open-tui](https://github.com/OldSuns/pi-open-tui) (MIT), which took the mark from pi's official install script. The tagline is inherited from its header.
 
-命令：`/grok-tui`（看当前解析结果）、`/grok-tui on|off`、`/grok-tui reload`、`/exit`（pi 只认 `/quit`，这里补一个同义词，走的是同一条退出路径）。
-
-## 主题
-
-`themes/grok.json` 和 `themes/grok-light.json`。深色版**不是凭空配的**——它继承自作者 Ghostty 的 Grok 主题：
-
-```
-background #141414   foreground #e1e1e1   cursor #d8b173
-palette 1/2/12 = #c6787a / #a8b380 / #a9c1cf
-```
-
-功能色直接取自那套 palette，线用终端的 selection 色 `#333333`，块背景 `#1a1a1a / #1e1e1e` 只比画布亮一到两档，thinking max 用光标的琥珀色。这样 pi 和同一个终端里的 ls、git、vim 是一套颜色。
-
-**换终端主题的话这套要重新校。** 三条规则不变：强调色是白不是彩色；层次靠灰阶不靠色相；彩色只在有语义时出现。
-
-两件主题管不了的事：
-
-- **画布颜色**属于终端。pi 只画文字和局部色块。
-- **字体**属于终端。这套配色是照着 `Maple Mono NF CN` 校的，Nerd Font 图标也依赖它。
-
-### 代码块
-
-pi 不给代码块画框、也不铺底色，而是把 ` ``` ` 围栏原样打出来当上下边界（`markdown.js` 里的 `case "code"`，字符是写死的，主题只能给它上色）。这里把 `mdCodeBlockBorder` 压到 `#1f1f1f`，围栏基本溶进画布，剩下的就是一段缩进文字。想换成左侧竖线，在 pi 的 `settings.json` 里设代码行前缀——这个字符串会原样贴在每行代码前面，可以带 ANSI：
-
-```json
-{ "markdown": { "codeBlockIndent": "\u001b[38;2;74;74;78m▏\u001b[39m " } }
-```
-
-## 开发
-
-```bash
-node preview.mjs themes/grok.json   # 在终端里渲染一屏假 TUI，看配色
-node preview-chrome.mjs 78          # 不启动 pi，直接渲染 header/footer 各变体，看布局
-node validate.mjs                   # 校验主题 token 完整性与 var 引用
-```
-
-主题文件是软链，编辑后 pi 会热重载。扩展改完要重启 pi 或 `/grok-tui reload`。
-
-## working 行的统计从哪来
-
-- **秒数**：`agent_start` 到 `agent_end` 之间计时，跨越整个 agent 运行——多轮工具调用不会重新计时。
-- **token**：已结束的消息用 provider 报告的 `usage.output` 累加；正在流的那条，如果 provider 还没报，就用 `estimateTokens()` 按文本估算。
-
-**为什么需要估算**：走 OpenAI 兼容协议的 provider（DeepSeek 等）只在最后一个 chunk 里返回 usage（`stream_options: {include_usage: true}`），所以一整条回复流完之前，报告值都是 0——数字会一动不动然后突然跳。估算填掉这个空档，让它从第一秒就在走。
-
-**`~` 表示当前数字含估算成分**，provider 的真实数字一到就接管（`~712 tok` → `712 tok`）。估算按字符数换算，跟真实计费 token 有出入。
-
-估算只在每次重绘（250ms）时算一次，不是每个 token 都算——`message_update` 每个 delta 都会触发，那样太密。
-
-## 为什么换 spinner 帧
-
-pi 原生的 `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` 是**两点绕圈**——两个亮点在 2×4 的 braille 点阵里跑。这个网格带来两个问题（下列尺寸在 Maple Mono NF CN 里实测，单位 1/1000 em）：
-
-| | 尺寸 | 宽高比 | 重心跳动 |
-|---|---|---|---|
-| pi 原生 `⠋⠙⠹…` | 376×772 | 0.49 | **213** |
-| `braille` `⣾⣽⣻…` | 376×772 | 0.49 | 0 |
-| `square` `◧◩◨◪` | **600×600** | **1.00** | 0 |
-
-- **重心跳动 213**（约字号 21%）：亮点在动，字形重心跟着上下移，spinner 相对旁边的文字明显浮动。
-- **宽高比 0.49**：braille 块是 2 列 × 4 行，天生是竖长的矩形。
-
-默认用 `braille`：八点亮七点、转的是缺口，包围盒恒定，抖动归零，形状仍是 braille 的竖矩形。`square` 用完整方框翻转内部填充，形状是正方形，但 Unicode 里这类方形部分填充字符只有 4 个（U+25E7–25EA），帧数减半、动画更跳。
-
-两组在 Maple Mono NF CN 和 JetBrains Mono NF 里都有完整字形。
-
-## 致谢
-
-logo 的网格坐标和 22 帧编排来自 [pi-open-tui](https://github.com/OldSuns/pi-open-tui)（MIT），它又源自 pi 官方安装脚本里的标记。那个包只渲染最后一帧——动画数据一直没被播过。这里把它播出来，并换成灰阶。
-
-## License
-
-MIT，见 [LICENSE](LICENSE)。
+MIT — see [LICENSE](LICENSE).

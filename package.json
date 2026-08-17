@@ -14,7 +14,7 @@
 		"url": "https://github.com/lawrencewzen/pi-grok-tui/issues"
 	},
 	"keywords": ["pi-package", "pi", "pi-coding-agent", "theme", "tui", "grok"],
-	"files": ["themes/", "extensions/", "README.md"],
+	"files": ["themes/", "extensions/", "README.md", "README.zh-CN.md"],
 	"pi": {
 		"themes": ["./themes"],
 		"extensions": ["./extensions/grok-tui/index.ts"]
