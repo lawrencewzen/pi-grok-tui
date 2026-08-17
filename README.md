@@ -39,7 +39,25 @@
 
 ## 安装
 
+从 npm 装（推荐）：
+
 ```bash
+pi install npm:pi-grok-tui     # 主题 + 扩展一起进来
+pi remove npm:pi-grok-tui      # 卸载
+```
+
+pi 只负责装包，两件收尾的事要自己在 `~/.pi/agent/settings.json` 里做（原因见下）：
+
+```json
+{ "theme": "grok", "quietStartup": true }
+```
+
+再把 `~/.pi/agent/open-tui.json` 里的 `"enabled"` 改成 `false`（如果装过 `pi-open-tui`）。
+
+或者克隆仓库用脚本装——软链主题、按路径注册扩展，上面两件事一并办了，改代码即时生效，适合开发：
+
+```bash
+git clone https://github.com/lawrencewzen/pi-grok-tui.git && cd pi-grok-tui
 ./install.sh              # 主题 + 扩展，并把 pi-open-tui 置为 enabled:false
 ./install.sh --themes     # 只装主题，不动界面
 ./install.sh --uninstall  # 全部还原
